@@ -1,3 +1,11 @@
+# 工具调用Agent模块
+# 设计说明：
+# 1. 工具抽象：提供统一的工具调用接口
+# 2. 执行控制：支持多种工具调用模式
+# 3. 错误处理：完整的异常捕获和恢复机制
+# 4. 状态管理：工具执行状态的转换控制
+# 5. 扩展支持：灵活的工具注册和管理机制
+
 import json
 from typing import Any, List, Literal
 
@@ -14,7 +22,18 @@ TOOL_CALL_REQUIRED = "Tool calls required but none provided"
 
 
 class ToolCallAgent(ReActAgent):
-    """Base agent class for handling tool/function calls with enhanced abstraction"""
+    """
+    Base agent class for handling tool/function calls with enhanced abstraction
+    
+    工具调用Agent基类
+    
+    核心功能：
+    1. 工具管理：统一的工具注册和调用接口
+    2. 执行模式：支持自动、强制和禁用三种调用模式
+    3. 状态控制：特殊工具的状态转换管理
+    4. 错误处理：完整的异常捕获和恢复机制
+    5. 结果处理：统一的工具执行结果格式化
+    """
 
     name: str = "toolcall"
     description: str = "an agent that can execute tool calls."
@@ -22,18 +41,51 @@ class ToolCallAgent(ReActAgent):
     system_prompt: str = SYSTEM_PROMPT
     next_step_prompt: str = NEXT_STEP_PROMPT
 
+    # 工具配置
+    # 设计说明：
+    # 1. 默认工具集：
+    #    - CreateChatCompletion: 对话生成工具
+    #    - Terminate: 执行终止工具
+    # 2. 调用模式：
+    #    - none: 禁用工具调用
+    #    - auto: 智能选择是否使用工具
+    #    - required: 强制要求使用工具
+    # 3. 特殊工具：可以影响Agent状态的工具列表
     available_tools: ToolCollection = ToolCollection(
         CreateChatCompletion(), Terminate()
     )
     tool_choices: Literal["none", "auto", "required"] = "auto"
     special_tool_names: List[str] = Field(default_factory=lambda: [Terminate().name])
 
+    # 运行时状态
+    # 说明：
+    # - tool_calls: 存储当前待执行的工具调用列表
+    # - 每个工具调用包含工具名称和参数信息
     tool_calls: List[ToolCall] = Field(default_factory=list)
 
+    # 执行控制参数
+    # 说明：
+    # - 默认30步：考虑到工具调用的复杂性
+    # - 可通过子类调整以适应不同场景
     max_steps: int = 30
 
     async def think(self) -> bool:
-        """Process current state and decide next actions using tools"""
+        """
+        Process current state and decide next actions using tools
+        
+        思考阶段实现
+        
+        执行流程：
+        1. 提示处理：添加next_step_prompt到对话历史
+        2. LLM调用：使用工具选项获取模型响应
+        3. 响应处理：根据tool_choices处理结果
+        4. 状态更新：更新内存和工具调用状态
+        5. 异常处理：捕获并记录执行异常
+        
+        返回值：
+        - True: 表示需要继续执行
+        - False: 表示当前阶段结束
+        """
         if self.next_step_prompt:
             user_msg = Message.user_message(self.next_step_prompt)
             self.messages += [user_msg]
@@ -99,7 +151,21 @@ class ToolCallAgent(ReActAgent):
             return False
 
     async def act(self) -> str:
-        """Execute tool calls and handle their results"""
+        """
+        Execute tool calls and handle their results
+        
+        行动阶段实现
+        
+        执行流程：
+        1. 调用验证：检查是否存在待执行的工具
+        2. 顺序执行：依次执行每个工具调用
+        3. 结果处理：记录执行结果到内存
+        4. 状态更新：更新Agent状态
+        
+        返回值：
+        - 字符串形式的执行结果
+        - 多个结果会被合并为一个字符串
+        """
         if not self.tool_calls:
             if self.tool_choices == "required":
                 raise ValueError(TOOL_CALL_REQUIRED)
@@ -124,7 +190,23 @@ class ToolCallAgent(ReActAgent):
         return "\n\n".join(results)
 
     async def execute_tool(self, command: ToolCall) -> str:
-        """Execute a single tool call with robust error handling"""
+        """
+        Execute a single tool call with robust error handling
+        
+        工具执行实现
+        
+        执行流程：
+        1. 命令验证：检查命令格式和工具可用性
+        2. 参数解析：将JSON格式参数转换为Python对象
+        3. 工具调用：执行具体工具的逻辑
+        4. 结果处理：格式化执行结果
+        5. 状态处理：处理特殊工具的状态变化
+        
+        异常处理：
+        1. JSON解析错误：参数格式无效
+        2. 工具执行错误：工具内部异常
+        3. 未知工具错误：工具不存在
+        """
         if not command or not command.function or not command.function.name:
             return "Error: Invalid command format"
 
@@ -163,7 +245,16 @@ class ToolCallAgent(ReActAgent):
             return f"Error: {error_msg}"
 
     async def _handle_special_tool(self, name: str, result: Any, **kwargs):
-        """Handle special tool execution and state changes"""
+        """
+        Handle special tool execution and state changes
+        
+        特殊工具处理
+        
+        功能：
+        1. 状态转换：处理可能改变Agent状态的工具
+        2. 执行控制：根据工具结果决定是否继续执行
+        3. 扩展支持：允许通过kwargs传递额外参数
+        """
         if not self._is_special_tool(name):
             return
 
@@ -174,9 +265,27 @@ class ToolCallAgent(ReActAgent):
 
     @staticmethod
     def _should_finish_execution(**kwargs) -> bool:
-        """Determine if tool execution should finish the agent"""
+        """
+        Determine if tool execution should finish the agent
+        
+        执行完成判断
+        
+        功能：
+        1. 默认行为：返回True表示执行应该结束
+        2. 可重写：子类可以实现自定义的完成判断逻辑
+        3. 参数灵活：支持通过kwargs传递额外判断条件
+        """
         return True
 
     def _is_special_tool(self, name: str) -> bool:
-        """Check if tool name is in special tools list"""
+        """
+        Check if tool name is in special tools list
+        
+        特殊工具检查
+        
+        实现特点：
+        1. 大小写不敏感：忽略工具名称的大小写
+        2. 高效实现：使用列表推导进行名称匹配
+        3. 灵活配置：支持动态更新特殊工具列表
+        """
         return name.lower() in [n.lower() for n in self.special_tool_names]

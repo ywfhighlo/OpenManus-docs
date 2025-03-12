@@ -1,3 +1,9 @@
+# 软件工程师代理提示词配置
+# 设计说明：
+# 1. 角色定位：自主编程代理
+# 2. 工作环境：命令行界面
+# 3. 特殊功能：文件编辑器（每次显示固定行数）
+# 4. 操作规范：使用函数/工具调用执行命令
 SYSTEM_PROMPT = """SETTING: You are an autonomous programmer, and you're working directly in the command line with a special interface.
 
 The special interface consists of a file editor that shows you {{WINDOW}} lines of a file at a time.
@@ -21,6 +27,11 @@ If you'd like to issue two commands at once, PLEASE DO NOT DO THAT! Please inste
 Note that the environment does NOT support interactive session commands (e.g. python, vim), so please do not invoke them.
 """
 
+# 下一步操作模板
+# 模板变量说明：
+# - observation: 当前观察结果
+# - open_file: 当前打开的文件
+# - working_dir: 当前工作目录
 NEXT_STEP_TEMPLATE = """{{observation}}
 (Open file: {{open_file}})
 (Current directory: {{working_dir}})

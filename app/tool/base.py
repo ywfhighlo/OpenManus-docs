@@ -1,9 +1,20 @@
+# 工具系统基础组件
+# 设计说明：
+# 1. 定义了工具系统的核心抽象类和接口
+# 2. 实现了工具执行结果的数据模型
+# 3. 提供了工具结果的组合和处理机制
+
 from abc import ABC, abstractmethod
 from typing import Any, Dict, Optional
 
 from pydantic import BaseModel, Field
 
 
+# 基础工具抽象类
+# 功能：
+# 1. 定义工具的基本属性（名称、描述、参数）
+# 2. 提供统一的执行接口
+# 3. 支持函数调用格式转换
 class BaseTool(ABC, BaseModel):
     name: str
     description: str
@@ -32,6 +43,11 @@ class BaseTool(ABC, BaseModel):
         }
 
 
+# 工具执行结果模型
+# 功能：
+# 1. 统一的结果表示（输出、错误、系统信息）
+# 2. 支持结果组合和运算
+# 3. 提供结果替换和更新机制
 class ToolResult(BaseModel):
     """Represents the result of a tool execution."""
 
@@ -70,13 +86,19 @@ class ToolResult(BaseModel):
         return type(self)(**{**self.dict(), **kwargs})
 
 
+# 命令行工具结果
+# 说明：专门用于CLI输出的结果类型
 class CLIResult(ToolResult):
     """A ToolResult that can be rendered as a CLI output."""
 
 
+# 工具执行失败结果
+# 说明：表示工具执行失败的专用结果类型
 class ToolFailure(ToolResult):
     """A ToolResult that represents a failure."""
 
 
+# Agent感知工具基类
+# 说明：支持与Agent交互的工具基类
 class AgentAwareTool:
     agent: Optional = None

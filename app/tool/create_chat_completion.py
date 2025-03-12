@@ -1,3 +1,10 @@
+# 聊天补全工具模块
+# 设计说明：
+# 1. 提供结构化的聊天补全功能
+# 2. 支持多种输出类型转换
+# 3. 自动生成JSON Schema
+# 4. 灵活的参数验证
+
 from typing import Any, List, Optional, Type, Union, get_args, get_origin
 
 from pydantic import BaseModel, Field
@@ -5,13 +12,20 @@ from pydantic import BaseModel, Field
 from app.tool import BaseTool
 
 
+# 聊天补全工具类
+# 功能特性：
+# 1. 类型映射和转换
+# 2. 动态参数构建
+# 3. 结构化输出
+# 4. 类型验证和转换
 class CreateChatCompletion(BaseTool):
     name: str = "create_chat_completion"
     description: str = (
         "Creates a structured completion with specified output formatting."
     )
 
-    # Type mapping for JSON schema
+    # 类型映射表
+    # Python类型到JSON Schema类型的映射关系
     type_mapping: dict = {
         str: "string",
         int: "integer",
@@ -24,13 +38,23 @@ class CreateChatCompletion(BaseTool):
     required: List[str] = Field(default_factory=lambda: ["response"])
 
     def __init__(self, response_type: Optional[Type] = str):
-        """Initialize with a specific response type."""
+        """初始化聊天补全工具
+        
+        参数：
+            response_type: 期望的响应类型
+        """
         super().__init__()
         self.response_type = response_type
         self.parameters = self._build_parameters()
 
     def _build_parameters(self) -> dict:
-        """Build parameters schema based on response type."""
+        """构建参数模式
+        
+        功能：
+        1. 处理字符串类型
+        2. 处理Pydantic模型
+        3. 处理其他类型
+        """
         if self.response_type == str:
             return {
                 "type": "object",
@@ -56,11 +80,18 @@ class CreateChatCompletion(BaseTool):
         return self._create_type_schema(self.response_type)
 
     def _create_type_schema(self, type_hint: Type) -> dict:
-        """Create a JSON schema for the given type."""
+        """创建类型的JSON Schema
+        
+        功能：
+        1. 处理基本类型
+        2. 处理列表类型
+        3. 处理字典类型
+        4. 处理联合类型
+        """
         origin = get_origin(type_hint)
         args = get_args(type_hint)
 
-        # Handle primitive types
+        # 处理基本类型
         if origin is None:
             return {
                 "type": "object",
@@ -73,7 +104,7 @@ class CreateChatCompletion(BaseTool):
                 "required": self.required,
             }
 
-        # Handle List type
+        # 处理列表类型
         if origin is list:
             item_type = args[0] if args else Any
             return {
@@ -87,7 +118,7 @@ class CreateChatCompletion(BaseTool):
                 "required": self.required,
             }
 
-        # Handle Dict type
+        # 处理字典类型
         if origin is dict:
             value_type = args[1] if len(args) > 1 else Any
             return {
@@ -101,14 +132,19 @@ class CreateChatCompletion(BaseTool):
                 "required": self.required,
             }
 
-        # Handle Union type
+        # 处理联合类型
         if origin is Union:
             return self._create_union_schema(args)
 
         return self._build_parameters()
 
     def _get_type_info(self, type_hint: Type) -> dict:
-        """Get type information for a single type."""
+        """获取类型信息
+        
+        功能：
+        1. 处理Pydantic模型
+        2. 处理基本类型
+        """
         if isinstance(type_hint, type) and issubclass(type_hint, BaseModel):
             return type_hint.model_json_schema()
 
@@ -118,7 +154,7 @@ class CreateChatCompletion(BaseTool):
         }
 
     def _create_union_schema(self, types: tuple) -> dict:
-        """Create schema for Union types."""
+        """创建联合类型的Schema"""
         return {
             "type": "object",
             "properties": {
@@ -128,30 +164,35 @@ class CreateChatCompletion(BaseTool):
         }
 
     async def execute(self, required: list | None = None, **kwargs) -> Any:
-        """Execute the chat completion with type conversion.
-
-        Args:
-            required: List of required field names or None
-            **kwargs: Response data
-
-        Returns:
-            Converted response based on response_type
+        """执行聊天补全
+        
+        功能：
+        1. 处理必需字段
+        2. 类型转换
+        3. 结果验证
+        
+        参数：
+            required: 必需字段列表
+            **kwargs: 响应数据
+        
+        返回：
+            根据response_type转换后的响应
         """
         required = required or self.required
 
-        # Handle case when required is a list
+        # 处理必需字段列表
         if isinstance(required, list) and len(required) > 0:
             if len(required) == 1:
                 required_field = required[0]
                 result = kwargs.get(required_field, "")
             else:
-                # Return multiple fields as a dictionary
+                # 返回多个字段的字典
                 return {field: kwargs.get(field, "") for field in required}
         else:
             required_field = "response"
             result = kwargs.get(required_field, "")
 
-        # Type conversion logic
+        # 类型转换逻辑
         if self.response_type == str:
             return result
 
@@ -161,7 +202,7 @@ class CreateChatCompletion(BaseTool):
             return self.response_type(**kwargs)
 
         if get_origin(self.response_type) in (list, dict):
-            return result  # Assuming result is already in correct format
+            return result  # 假设结果已经是正确的格式
 
         try:
             return self.response_type(result)

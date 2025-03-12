@@ -1,3 +1,11 @@
+# LLM接口模块
+# 设计说明：
+# 1. 提供LLM模型统一接口
+# 2. 支持多种模型配置
+# 3. 实现消息格式化和验证
+# 4. 提供重试和错误处理机制
+# 5. 支持流式输出和工具调用
+
 from typing import Dict, List, Literal, Optional, Union
 
 from openai import (
@@ -16,11 +24,32 @@ from app.schema import Message
 
 
 class LLM:
+    """
+    LLM模型接口类
+    
+    功能特性：
+    1. 单例模式：每个配置名称对应一个实例
+    2. 多模型支持：支持Azure和OpenAI接口
+    3. 配置管理：支持默认和自定义配置
+    4. 消息处理：提供消息格式化和验证
+    5. 错误处理：实现重试机制和异常处理
+    """
     _instances: Dict[str, "LLM"] = {}
 
     def __new__(
         cls, config_name: str = "default", llm_config: Optional[LLMSettings] = None
     ):
+        """
+        创建LLM实例（单例模式）
+        
+        功能：
+        1. 实例管理：维护配置名称到实例的映射
+        2. 单例保证：确保每个配置只创建一个实例
+        
+        参数：
+        - config_name: 配置名称
+        - llm_config: 可选的LLM配置
+        """
         if config_name not in cls._instances:
             instance = super().__new__(cls)
             instance.__init__(config_name, llm_config)
@@ -30,6 +59,18 @@ class LLM:
     def __init__(
         self, config_name: str = "default", llm_config: Optional[LLMSettings] = None
     ):
+        """
+        初始化LLM实例
+        
+        功能：
+        1. 配置加载：加载模型配置
+        2. 客户端创建：创建API客户端
+        3. 参数设置：设置模型参数
+        
+        参数：
+        - config_name: 配置名称
+        - llm_config: 可选的LLM配置
+        """
         if not hasattr(self, "client"):  # Only initialize if not already initialized
             llm_config = llm_config or config.llm
             llm_config = llm_config.get(config_name, llm_config["default"])
@@ -71,6 +112,14 @@ class LLM:
             ...     Message.user_message("How are you?")
             ... ]
             >>> formatted = LLM.format_messages(msgs)
+            
+        消息格式化
+        
+        功能：
+        1. 格式转换：将消息对象转换为OpenAI格式
+        2. 类型验证：验证消息类型和必要字段
+        3. 字段检查：确保角色和内容字段有效
+        4. 错误处理：提供详细的错误信息
         """
         formatted_messages = []
 
@@ -124,6 +173,15 @@ class LLM:
             ValueError: If messages are invalid or response is empty
             OpenAIError: If API call fails after retries
             Exception: For unexpected errors
+            
+        发送提示并获取响应
+        
+        功能：
+        1. 消息处理：格式化和组合消息
+        2. 流式输出：支持流式响应
+        3. 参数控制：支持温度等参数调整
+        4. 错误重试：实现指数退避重试
+        5. 异常处理：处理各类API错误
         """
         try:
             # Format system and user messages
@@ -210,6 +268,15 @@ class LLM:
             ValueError: If tools, tool_choice, or messages are invalid
             OpenAIError: If API call fails after retries
             Exception: For unexpected errors
+            
+        使用工具调用LLM
+        
+        功能：
+        1. 工具支持：支持函数调用和工具使用
+        2. 策略控制：控制工具选择策略
+        3. 超时处理：支持请求超时设置
+        4. 参数验证：验证工具和选择策略
+        5. 错误处理：处理API错误和重试
         """
         try:
             # Validate tool_choice

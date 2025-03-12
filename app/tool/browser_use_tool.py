@@ -1,3 +1,10 @@
+# 浏览器操作工具模块
+# 设计说明：
+# 1. 提供完整的浏览器自动化功能
+# 2. 支持多种浏览器操作和交互
+# 3. 实现标签页管理和状态控制
+# 4. 提供异步操作和并发控制
+
 import asyncio
 import json
 from typing import Optional
@@ -11,8 +18,15 @@ from pydantic_core.core_schema import ValidationInfo
 
 from app.tool.base import BaseTool, ToolResult
 
+# 最大内容长度限制
 MAX_LENGTH = 2000
 
+# 浏览器工具描述
+# 功能说明：
+# 1. 导航和页面控制
+# 2. 元素交互和操作
+# 3. 内容获取和截图
+# 4. 标签页管理
 _BROWSER_DESCRIPTION = """
 Interact with a web browser to perform various actions such as navigation, element interaction,
 content extraction, and tab management. Supported actions include:
@@ -32,9 +46,25 @@ content extraction, and tab management. Supported actions include:
 """
 
 
+# 浏览器操作工具类
+# 功能特性：
+# 1. 浏览器实例管理
+# 2. 并发控制和锁机制
+# 3. 丰富的操作接口
+# 4. 错误处理和状态管理
 class BrowserUseTool(BaseTool):
     name: str = "browser_use"
     description: str = _BROWSER_DESCRIPTION
+    # 工具参数定义
+    # 必需参数：
+    # - action: 要执行的浏览器操作
+    # 可选参数（根据action不同而不同）：
+    # - url: 用于导航或新标签页
+    # - index: 用于点击或输入文本的元素索引
+    # - text: 用于输入文本
+    # - script: 用于执行JavaScript代码
+    # - scroll_amount: 用于滚动页面
+    # - tab_id: 用于切换标签页
     parameters: dict = {
         "type": "object",
         "properties": {
@@ -90,6 +120,11 @@ class BrowserUseTool(BaseTool):
         },
     }
 
+    # 实例属性
+    # - lock: 并发控制锁
+    # - browser: 浏览器实例
+    # - context: 浏览器上下文
+    # - dom_service: DOM操作服务
     lock: asyncio.Lock = Field(default_factory=asyncio.Lock)
     browser: Optional[BrowserUseBrowser] = Field(default=None, exclude=True)
     context: Optional[BrowserContext] = Field(default=None, exclude=True)
@@ -97,12 +132,19 @@ class BrowserUseTool(BaseTool):
 
     @field_validator("parameters", mode="before")
     def validate_parameters(cls, v: dict, info: ValidationInfo) -> dict:
+        """验证工具参数"""
         if not v:
             raise ValueError("Parameters cannot be empty")
         return v
 
     async def _ensure_browser_initialized(self) -> BrowserContext:
-        """Ensure browser and context are initialized."""
+        """确保浏览器已初始化
+        
+        功能：
+        1. 检查并创建浏览器实例
+        2. 初始化浏览器上下文
+        3. 设置DOM服务
+        """
         if self.browser is None:
             self.browser = BrowserUseBrowser(BrowserConfig(headless=False))
         if self.context is None:
@@ -121,21 +163,27 @@ class BrowserUseTool(BaseTool):
         tab_id: Optional[int] = None,
         **kwargs,
     ) -> ToolResult:
-        """
-        Execute a specified browser action.
-
-        Args:
-            action: The browser action to perform
-            url: URL for navigation or new tab
-            index: Element index for click or input actions
-            text: Text for input action
-            script: JavaScript code for execution
-            scroll_amount: Pixels to scroll for scroll action
-            tab_id: Tab ID for switch_tab action
-            **kwargs: Additional arguments
-
-        Returns:
-            ToolResult with the action's output or error
+        """执行浏览器操作
+        
+        支持的操作：
+        1. 导航和页面控制
+           - navigate: 导航到指定URL
+           - refresh: 刷新当前页面
+        2. 元素交互
+           - click: 点击指定索引的元素
+           - input_text: 在指定元素中输入文本
+        3. 内容获取
+           - screenshot: 截取页面截图
+           - get_html: 获取页面HTML
+           - get_text: 获取页面文本
+           - read_links: 获取所有链接
+        4. 页面操作
+           - execute_js: 执行JavaScript代码
+           - scroll: 滚动页面
+        5. 标签页管理
+           - switch_tab: 切换到指定标签页
+           - new_tab: 打开新标签页
+           - close_tab: 关闭当前标签页
         """
         async with self.lock:
             try:
@@ -244,7 +292,7 @@ class BrowserUseTool(BaseTool):
                 return ToolResult(error=f"Browser action '{action}' failed: {str(e)}")
 
     async def get_current_state(self) -> ToolResult:
-        """Get the current browser state as a ToolResult."""
+        """获取当前浏览器状态"""
         async with self.lock:
             try:
                 context = await self._ensure_browser_initialized()

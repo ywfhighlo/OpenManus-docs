@@ -1,3 +1,10 @@
+# 文件保存工具模块
+# 设计说明：
+# 1. 提供异步文件保存功能
+# 2. 支持文件写入和追加模式
+# 3. 自动创建目标目录
+# 4. 统一的错误处理机制
+
 import os
 
 import aiofiles
@@ -5,12 +12,24 @@ import aiofiles
 from app.tool.base import BaseTool
 
 
+# 文件保存工具类
+# 功能特性：
+# 1. 支持文本内容保存
+# 2. 自动创建目标目录
+# 3. 可选的写入模式（写入/追加）
+# 4. 异步IO操作
 class FileSaver(BaseTool):
     name: str = "file_saver"
     description: str = """Save content to a local file at a specified path.
 Use this tool when you need to save text, code, or generated content to a file on the local filesystem.
 The tool accepts content and a file path, and saves the content to that location.
 """
+    # 工具参数定义
+    # 必需参数：
+    # - content: 要保存的内容
+    # - file_path: 保存路径
+    # 可选参数：
+    # - mode: 文件打开模式（w:写入/a:追加）
     parameters: dict = {
         "type": "object",
         "properties": {
@@ -45,12 +64,12 @@ The tool accepts content and a file path, and saves the content to that location
             str: A message indicating the result of the operation.
         """
         try:
-            # Ensure the directory exists
+            # 确保目标目录存在
             directory = os.path.dirname(file_path)
             if directory and not os.path.exists(directory):
                 os.makedirs(directory)
 
-            # Write directly to the file
+            # 异步写入文件内容
             async with aiofiles.open(file_path, mode, encoding="utf-8") as file:
                 await file.write(content)
 

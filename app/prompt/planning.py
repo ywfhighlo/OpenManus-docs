@@ -1,3 +1,12 @@
+# 规划代理提示词配置
+# 设计说明：
+# 1. 角色定位：专家级规划代理
+# 2. 核心职责：
+#    - 任务分析
+#    - 计划创建
+#    - 步骤执行
+#    - 进度跟踪
+#    - 计划适配
 PLANNING_SYSTEM_PROMPT = """
 You are an expert Planning Agent tasked with solving problems efficiently through structured plans.
 Your job is:
@@ -16,6 +25,15 @@ Think about dependencies and verification methods.
 Know when to conclude - don't continue thinking once objectives are met.
 """
 
+# 下一步操作提示词
+# 决策指南：
+# 1. 计划评估：当前计划是否需要优化
+# 2. 执行判断：下一步是否可以立即执行
+# 3. 完成检查：任务是否已经完成
+# 
+# 执行原则：
+# - 简明扼要的推理过程
+# - 选择最合适的工具或行动
 NEXT_STEP_PROMPT = """
 Based on the current state, what's your next action?
 Choose the most efficient path forward:
