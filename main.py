@@ -31,32 +31,17 @@ async def main():
     5. 状态反馈：通过日志系统提供执行状态
     """
     agent = Manus()
-    while True:
-        try:
-            # 用户输入处理
-            # - 提供清晰的提示信息
-            # - 支持多种退出命令
-            # - 过滤空白输入
-            prompt = input("Enter your prompt (or 'exit'/'quit' to quit): ")
-            prompt_lower = prompt.lower()
-            if prompt_lower in ["exit", "quit"]:
-                logger.info("Goodbye!")
-                break
-            if not prompt.strip():
-                logger.warning("Skipping empty prompt.")
-                continue
-            
-            # 请求处理
-            # - 提供处理状态反馈
-            # - 异步执行Agent操作
-            logger.warning("Processing your request...")
-            await agent.run(prompt)
-        except KeyboardInterrupt:
-            # 中断处理
-            # - 优雅退出程序
-            # - 提供友好的退出提示
-            logger.warning("Goodbye!")
-            break
+    try:
+        prompt = input("Enter your prompt: ")
+        if not prompt.strip():
+            logger.warning("Empty prompt provided.")
+            return
+
+        logger.warning("Processing your request...")
+        await agent.run(prompt)
+        logger.info("Request processing completed.")
+    except KeyboardInterrupt:
+        logger.warning("Operation interrupted.")
 
 
 if __name__ == "__main__":

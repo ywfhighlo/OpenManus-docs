@@ -7,14 +7,14 @@
 # 5. 错误处理：完善的异常处理和恢复机制
 
 import time
-from typing import Dict, List, Literal, Optional
+from typing import Dict, List, Optional
 
 from pydantic import Field, model_validator
 
 from app.agent.toolcall import ToolCallAgent
 from app.logger import logger
 from app.prompt.planning import NEXT_STEP_PROMPT, PLANNING_SYSTEM_PROMPT
-from app.schema import Message, ToolCall
+from app.schema import Message, TOOL_CHOICE_TYPE, ToolCall, ToolChoice
 from app.tool import PlanningTool, Terminate, ToolCollection
 
 # 规划Agent
@@ -63,7 +63,7 @@ class PlanningAgent(ToolCallAgent):
     available_tools: ToolCollection = Field(
         default_factory=lambda: ToolCollection(PlanningTool(), Terminate())
     )
-    tool_choices: Literal["none", "auto", "required"] = "auto"
+    tool_choices: TOOL_CHOICE_TYPE = ToolChoice.AUTO # type: ignore
     special_tool_names: List[str] = Field(default_factory=lambda: [Terminate().name])
 
     # 状态追踪
@@ -411,7 +411,7 @@ class PlanningAgent(ToolCallAgent):
             messages=messages,
             system_msgs=[Message.system_message(self.system_prompt)],
             tools=self.available_tools.to_params(),
-            tool_choice="required",
+            tool_choice=ToolChoice.REQUIRED,
         )
         assistant_msg = Message.from_tool_calls(
             content=response.content, tool_calls=response.tool_calls

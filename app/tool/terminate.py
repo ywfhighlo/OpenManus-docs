@@ -7,9 +7,8 @@
 from app.tool.base import BaseTool
 
 
-# 终止工具描述
-# 说明：当任务完成或无法继续时终止交互
-_TERMINATE_DESCRIPTION = """Terminate the interaction when the request is met OR if the assistant cannot proceed further with the task."""
+_TERMINATE_DESCRIPTION = """Terminate the interaction when the request is met OR if the assistant cannot proceed further with the task.
+When you have finished all the tasks, call this tool to end the work."""
 
 
 # 终止工具类

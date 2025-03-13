@@ -46,61 +46,38 @@ async def run_flow():
         "manus": Manus(),
     }
 
-    while True:
+    try:
+        prompt = input("Enter your prompt: ")
+
+        if prompt.strip().isspace() or not prompt:
+            logger.warning("Empty prompt provided.")
+            return
+
+        flow = FlowFactory.create_flow(
+            flow_type=FlowType.PLANNING,
+            agents=agents,
+        )
+        logger.warning("Processing your request...")
+
         try:
-            # 用户输入处理
-            # - 提供清晰的提示信息
-            # - 支持exit退出命令
-            prompt = input("Enter your prompt (or 'exit' to quit): ")
-            if prompt.lower() == "exit":
-                logger.info("Goodbye!")
-                break
-
-            # 流程创建和配置
-            # - 使用规划类型流程
-            # - 配置已注册的agents
-            flow = FlowFactory.create_flow(
-                flow_type=FlowType.PLANNING,
-                agents=agents,
+            start_time = time.time()
+            result = await asyncio.wait_for(
+                flow.execute(prompt),
+                timeout=3600,  # 60 minute timeout for the entire execution
             )
-            if prompt.strip().isspace():
-                logger.warning("Skipping empty prompt.")
-                continue
-            logger.warning("Processing your request...")
+            elapsed_time = time.time() - start_time
+            logger.info(f"Request processed in {elapsed_time:.2f} seconds")
+            logger.info(result)
+        except asyncio.TimeoutError:
+            logger.error("Request processing timed out after 1 hour")
+            logger.info(
+                "Operation terminated due to timeout. Please try a simpler request."
+            )
 
-            try:
-                # 执行控制
-                # - 记录开始时间
-                # - 设置超时限制
-                # - 等待执行完成
-                start_time = time.time()
-                result = await asyncio.wait_for(
-                    flow.execute(prompt),
-                    timeout=3600,  # 60分钟超时限制
-                )
-                # 性能统计
-                # - 计算执行时间
-                # - 记录执行结果
-                elapsed_time = time.time() - start_time
-                logger.info(f"Request processed in {elapsed_time:.2f} seconds")
-                logger.info(result)
-            except asyncio.TimeoutError:
-                # 超时处理
-                # - 记录错误信息
-                # - 提供用户建议
-                logger.error("Request processing timed out after 1 hour")
-                logger.info(
-                    "Operation terminated due to timeout. Please try a simpler request."
-                )
-
-        except KeyboardInterrupt:
-            # 中断处理
-            # - 记录用户取消操作
-            logger.info("Operation cancelled by user.")
-        except Exception as e:
-            # 异常处理
-            # - 记录详细错误信息
-            logger.error(f"Error: {str(e)}")
+    except KeyboardInterrupt:
+        logger.info("Operation cancelled by user.")
+    except Exception as e:
+        logger.error(f"Error: {str(e)}")
 
 
 if __name__ == "__main__":

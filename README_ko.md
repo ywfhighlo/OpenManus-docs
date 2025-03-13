@@ -1,6 +1,4 @@
-
-[English](README.md) | 中文 | [한국어](README_ko.md)
-
+[English](README.md) | [中文](README_zh.md) | 한국어
 
 
 [![GitHub stars](https://img.shields.io/github/stars/mannaandpoem/OpenManus?style=social)](https://github.com/mannaandpoem/OpenManus/stargazers)
@@ -10,150 +8,147 @@
 
 # 👋 OpenManus
 
-Manus 非常棒，但 OpenManus 无需邀请码即可实现任何创意 🛫！
+Manus는 놀라운 도구지만, OpenManus는 *초대 코드* 없이도 모든 아이디어를 실현할 수 있습니다! 🛫
 
-我们的团队成员 [@Xinbin Liang](https://github.com/mannaandpoem) 和 [@Jinyu Xiang](https://github.com/XiangJinyu)（核心作者），以及 [@Zhaoyang Yu](https://github.com/MoshiQAQ)、[@Jiayi Zhang](https://github.com/didiforgithub) 和 [@Sirui Hong](https://github.com/stellaHSR)，来自 [@MetaGPT](https://github.com/geekan/MetaGPT)团队。我们在 3
-小时内完成了开发并持续迭代中！
+우리 팀의 멤버인 [@Xinbin Liang](https://github.com/mannaandpoem)와 [@Jinyu Xiang](https://github.com/XiangJinyu) (핵심 작성자), 그리고 [@Zhaoyang Yu](https://github.com/MoshiQAQ), [@Jiayi Zhang](https://github.com/didiforgithub), [@Sirui Hong](https://github.com/stellaHSR)이 함께 했습니다. 우리는 [@MetaGPT](https://github.com/geekan/MetaGPT)로부터 왔습니다. 프로토타입은 단 3시간 만에 출시되었으며, 계속해서 발전하고 있습니다!
 
-这是一个简洁的实现方案，欢迎任何建议、贡献和反馈！
+이 프로젝트는 간단한 구현에서 시작되었으며, 여러분의 제안, 기여 및 피드백을 환영합니다!
 
-用 OpenManus 开启你的智能体之旅吧！
+OpenManus를 통해 여러분만의 에이전트를 즐겨보세요!
 
-我们也非常高兴地向大家介绍 [OpenManus-RL](https://github.com/OpenManus/OpenManus-RL)，这是一个专注于基于强化学习（RL，例如 GRPO）的方法来优化大语言模型（LLM）智能体的开源项目，由来自UIUC 和 OpenManus 的研究人员合作开发。
+또한 [OpenManus-RL](https://github.com/OpenManus/OpenManus-RL)을 소개하게 되어 기쁩니다. OpenManus와 UIUC 연구자들이 공동 개발한 이 오픈소스 프로젝트는 LLM 에이전트에 대해 강화 학습(RL) 기반 (예: GRPO) 튜닝 방법을 제공합니다.
 
-## 项目演示
+## 프로젝트 데모
 
 <video src="https://private-user-images.githubusercontent.com/61239030/420168772-6dcfd0d2-9142-45d9-b74e-d10aa75073c6.mp4?jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJnaXRodWIuY29tIiwiYXVkIjoicmF3LmdpdGh1YnVzZXJjb250ZW50LmNvbSIsImtleSI6ImtleTUiLCJleHAiOjE3NDEzMTgwNTksIm5iZiI6MTc0MTMxNzc1OSwicGF0aCI6Ii82MTIzOTAzMC80MjAxNjg3NzItNmRjZmQwZDItOTE0Mi00NWQ5LWI3NGUtZDEwYWE3NTA3M2M2Lm1wND9YLUFtei1BbGdvcml0aG09QVdTNC1ITUFDLVNIQTI1NiZYLUFtei1DcmVkZW50aWFsPUFLSUFWQ09EWUxTQTUzUFFLNFpBJTJGMjAyNTAzMDclMkZ1cy1lYXN0LTElMkZzMyUyRmF3czRfcmVxdWVzdCZYLUFtei1EYXRlPTIwMjUwMzA3VDAzMjIzOVomWC1BbXotRXhwaXJlcz0zMDAmWC1BbXotU2lnbmF0dXJlPTdiZjFkNjlmYWNjMmEzOTliM2Y3M2VlYjgyNDRlZDJmOWE3NWZhZjE1MzhiZWY4YmQ3NjdkNTYwYTU5ZDA2MzYmWC1BbXotU2lnbmVkSGVhZGVycz1ob3N0In0.UuHQCgWYkh0OQq9qsUWqGsUbhG3i9jcZDAMeHjLt5T4" data-canonical-src="https://private-user-images.githubusercontent.com/61239030/420168772-6dcfd0d2-9142-45d9-b74e-d10aa75073c6.mp4?jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJnaXRodWIuY29tIiwiYXVkIjoicmF3LmdpdGh1YnVzZXJjb250ZW50LmNvbSIsImtleSI6ImtleTUiLCJleHAiOjE3NDEzMTgwNTksIm5iZiI6MTc0MTMxNzc1OSwicGF0aCI6Ii82MTIzOTAzMC80MjAxNjg3NzItNmRjZmQwZDItOTE0Mi00NWQ5LWI3NGUtZDEwYWE3NTA3M2M2Lm1wND9YLUFtei1BbGdvcml0aG09QVdTNC1ITUFDLVNIQTI1NiZYLUFtei1DcmVkZW50aWFsPUFLSUFWQ09EWUxTQTUzUFFLNFpBJTJGMjAyNTAzMDclMkZ1cy1lYXN0LTElMkZzMyUyRmF3czRfcmVxdWVzdCZYLUFtei1EYXRlPTIwMjUwMzA3VDAzMjIzOVomWC1BbXotRXhwaXJlcz0zMDAmWC1BbXotU2lnbmF0dXJlPTdiZjFkNjlmYWNjMmEzOTliM2Y3M2VlYjgyNDRlZDJmOWE3NWZhZjE1MzhiZWY4YmQ3NjdkNTYwYTU5ZDA2MzYmWC1BbXotU2lnbmVkSGVhZGVycz1ob3N0In0.UuHQCgWYkh0OQq9qsUWqGsUbhG3i9jcZDAMeHjLt5T4" controls="controls" muted="muted" class="d-block rounded-bottom-2 border-top width-fit" style="max-height:640px; min-height: 200px"></video>
 
-## 安装指南
+## 설치 방법
 
-我们提供两种安装方式。推荐使用方式二（uv），因为它能提供更快的安装速度和更好的依赖管理。
+두 가지 설치 방법을 제공합니다. **방법 2 (uv 사용)** 이 더 빠른 설치와 효율적인 종속성 관리를 위해 권장됩니다.
 
-### 方式一：使用 conda
+### 방법 1: conda 사용
 
-1. 创建新的 conda 环境：
+1. 새로운 conda 환경을 생성합니다:
 
 ```bash
 conda create -n open_manus python=3.12
 conda activate open_manus
 ```
 
-2. 克隆仓库：
+2. 저장소를 클론합니다:
 
 ```bash
 git clone https://github.com/mannaandpoem/OpenManus.git
 cd OpenManus
 ```
 
-3. 安装依赖：
+3. 종속성을 설치합니다:
 
 ```bash
 pip install -r requirements.txt
 ```
 
-### 方式二：使用 uv（推荐）
+### 방법 2: uv 사용 (권장)
 
-1. 安装 uv（一个快速的 Python 包管理器）：
+1. uv를 설치합니다. (빠른 Python 패키지 설치 및 종속성 관리 도구):
 
 ```bash
 curl -LsSf https://astral.sh/uv/install.sh | sh
 ```
 
-2. 克隆仓库：
+2. 저장소를 클론합니다:
 
 ```bash
 git clone https://github.com/mannaandpoem/OpenManus.git
 cd OpenManus
 ```
 
-3. 创建并激活虚拟环境：
+3. 새로운 가상 환경을 생성하고 활성화합니다:
 
 ```bash
 uv venv
-source .venv/bin/activate  # Unix/macOS 系统
-# Windows 系统使用：
+source .venv/bin/activate  # Unix/macOS의 경우
+# Windows의 경우:
 # .venv\Scripts\activate
 ```
 
-4. 安装依赖：
+4. 종속성을 설치합니다:
 
 ```bash
 uv pip install -r requirements.txt
 ```
 
-## 配置说明
+## 설정 방법
 
-OpenManus 需要配置使用的 LLM API，请按以下步骤设置：
+OpenManus를 사용하려면 사용하는 LLM API에 대한 설정이 필요합니다. 아래 단계를 따라 설정을 완료하세요:
 
-1. 在 `config` 目录创建 `config.toml` 文件（可从示例复制）：
+1. `config` 디렉토리에 `config.toml` 파일을 생성하세요 (예제 파일을 복사하여 사용할 수 있습니다):
 
 ```bash
 cp config/config.example.toml config/config.toml
 ```
 
-2. 编辑 `config/config.toml` 添加 API 密钥和自定义设置：
+2. `config/config.toml` 파일을 편집하여 API 키를 추가하고 설정을 커스터마이징하세요:
 
 ```toml
-# 全局 LLM 配置
+# 전역 LLM 설정
 [llm]
 model = "gpt-4o"
 base_url = "https://api.openai.com/v1"
-api_key = "sk-..."  # 替换为真实 API 密钥
+api_key = "sk-..."  # 실제 API 키로 변경하세요
 max_tokens = 4096
 temperature = 0.0
 
-# 可选特定 LLM 模型配置
+# 특정 LLM 모델에 대한 선택적 설정
 [llm.vision]
 model = "gpt-4o"
 base_url = "https://api.openai.com/v1"
-api_key = "sk-..."  # 替换为真实 API 密钥
+api_key = "sk-..."  # 실제 API 키로 변경하세요
 ```
 
-## 快速启动
+## 빠른 시작
 
-一行命令运行 OpenManus：
+OpenManus를 실행하는 한 줄 명령어:
 
 ```bash
 python main.py
 ```
 
-然后通过终端输入你的创意！
+이후 터미널에서 아이디어를 작성하세요!
 
-如需体验开发中版本，可运行：
+unstable 버전을 실행하려면 아래 명령어를 사용할 수도 있습니다:
 
 ```bash
 python run_flow.py
 ```
 
-## 贡献指南
+## 기여 방법
 
-我们欢迎任何友好的建议和有价值的贡献！可以直接创建 issue 或提交 pull request。
+모든 친절한 제안과 유용한 기여를 환영합니다! 이슈를 생성하거나 풀 리퀘스트를 제출해 주세요.
 
-或通过 📧 邮件联系 @mannaandpoem：mannaandpoem@gmail.com
+또는 📧 메일로 연락주세요. @mannaandpoem : mannaandpoem@gmail.com
 
-## 交流群
-
-加入我们的飞书交流群，与其他开发者分享经验！
+## 커뮤니티 그룹
+Feishu 네트워킹 그룹에 참여하여 다른 개발자들과 경험을 공유하세요!
 
 <div align="center" style="display: flex; gap: 20px;">
     <img src="assets/community_group.jpg" alt="OpenManus 交流群" width="300" />
 </div>
 
-## Star 数量
+## Star History
 
 [![Star History Chart](https://api.star-history.com/svg?repos=mannaandpoem/OpenManus&type=Date)](https://star-history.com/#mannaandpoem/OpenManus&Date)
 
-## 致谢
+## 감사의 글
 
-特别感谢 [anthropic-computer-use](https://github.com/anthropics/anthropic-quickstarts/tree/main/computer-use-demo)
-和 [browser-use](https://github.com/browser-use/browser-use) 为本项目提供的基础支持！
+이 프로젝트에 기본적인 지원을 제공해 주신 [anthropic-computer-use](https://github.com/anthropics/anthropic-quickstarts/tree/main/computer-use-demo)와
+[browser-use](https://github.com/browser-use/browser-use)에게 감사드립니다!
 
-此外，我们感谢 [AAAJ](https://github.com/metauto-ai/agent-as-a-judge)，[MetaGPT](https://github.com/geekan/MetaGPT) 和 [OpenHands](https://github.com/All-Hands-AI/OpenHands).
+또한, [AAAJ](https://github.com/metauto-ai/agent-as-a-judge), [MetaGPT](https://github.com/geekan/MetaGPT), [OpenHands](https://github.com/All-Hands-AI/OpenHands)에 깊은 감사를 드립니다.
 
-OpenManus 由 MetaGPT 社区的贡献者共同构建，感谢这个充满活力的智能体开发者社区！
+OpenManus는 MetaGPT 기여자들에 의해 개발되었습니다. 이 에이전트 커뮤니티에 깊은 감사를 전합니다!
 
-## 引用我们
-
+## 인용
 ```bibtex
 @misc{openmanus2025,
   author = {Xinbin Liang and Jinyu Xiang and Zhaoyang Yu and Jiayi Zhang and Sirui Hong},

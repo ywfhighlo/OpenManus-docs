@@ -1,12 +1,4 @@
-# LLM接口模块
-# 设计说明：
-# 1. 提供LLM模型统一接口
-# 2. 支持多种模型配置
-# 3. 实现消息格式化和验证
-# 4. 提供重试和错误处理机制
-# 5. 支持流式输出和工具调用
-
-from typing import Dict, List, Literal, Optional, Union
+from typing import Dict, List, Optional, Union
 
 from openai import (
     APIError,
@@ -20,7 +12,7 @@ from tenacity import retry, stop_after_attempt, wait_random_exponential
 
 from app.config import LLMSettings, config
 from app.logger import logger  # Assuming a logger is set up in your app
-from app.schema import Message
+from app.schema import Message, TOOL_CHOICE_TYPE, ROLE_VALUES, TOOL_CHOICE_VALUES, ToolChoice
 
 
 class LLM:
@@ -137,7 +129,7 @@ class LLM:
 
         # Validate all messages have required fields
         for msg in formatted_messages:
-            if msg["role"] not in ["system", "user", "assistant", "tool"]:
+            if msg["role"] not in ROLE_VALUES:
                 raise ValueError(f"Invalid role: {msg['role']}")
             if "content" not in msg and "tool_calls" not in msg:
                 raise ValueError(
@@ -243,9 +235,9 @@ class LLM:
         self,
         messages: List[Union[dict, Message]],
         system_msgs: Optional[List[Union[dict, Message]]] = None,
-        timeout: int = 60,
+        timeout: int = 300,
         tools: Optional[List[dict]] = None,
-        tool_choice: Literal["none", "auto", "required"] = "auto",
+        tool_choice: TOOL_CHOICE_TYPE = ToolChoice.AUTO, # type: ignore
         temperature: Optional[float] = None,
         **kwargs,
     ):
@@ -280,7 +272,7 @@ class LLM:
         """
         try:
             # Validate tool_choice
-            if tool_choice not in ["none", "auto", "required"]:
+            if tool_choice not in TOOL_CHOICE_VALUES:
                 raise ValueError(f"Invalid tool_choice: {tool_choice}")
 
             # Format messages

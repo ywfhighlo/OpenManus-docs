@@ -11,6 +11,24 @@ from typing import Any, List, Literal, Optional, Union
 
 from pydantic import BaseModel, Field
 
+class Role(str, Enum):
+    """Message role options"""
+    SYSTEM = "system"
+    USER = "user"
+    ASSISTANT = "assistant" 
+    TOOL = "tool"
+
+ROLE_VALUES = tuple(role.value for role in Role)
+ROLE_TYPE = Literal[ROLE_VALUES]  # type: ignore
+
+class ToolChoice(str, Enum):
+    """Tool choice options"""
+    NONE = "none"
+    AUTO = "auto"
+    REQUIRED = "required"
+
+TOOL_CHOICE_VALUES = tuple(choice.value for choice in ToolChoice)
+TOOL_CHOICE_TYPE = Literal[TOOL_CHOICE_VALUES]  # type: ignore
 
 class AgentState(str, Enum):
     """
@@ -74,7 +92,7 @@ class Message(BaseModel):
     5. 格式转换：支持字典格式转换
     """
 
-    role: Literal["system", "user", "assistant", "tool"] = Field(...)
+    role: ROLE_TYPE = Field(...) # type: ignore
     content: Optional[str] = Field(default=None)
     tool_calls: Optional[List[ToolCall]] = Field(default=None)
     name: Optional[str] = Field(default=None)
@@ -136,49 +154,23 @@ class Message(BaseModel):
 
     @classmethod
     def user_message(cls, content: str) -> "Message":
-        """
-        Create a user message
-        
-        创建用户消息
-        
-        功能：快速创建用户角色的消息实例
-        """
-        return cls(role="user", content=content)
+        """Create a user message"""
+        return cls(role=Role.USER, content=content)
 
     @classmethod
     def system_message(cls, content: str) -> "Message":
-        """
-        Create a system message
-        
-        创建系统消息
-        
-        功能：快速创建系统角色的消息实例
-        """
-        return cls(role="system", content=content)
+        """Create a system message"""
+        return cls(role=Role.SYSTEM, content=content)
 
     @classmethod
     def assistant_message(cls, content: Optional[str] = None) -> "Message":
-        """
-        Create an assistant message
-        
-        创建助手消息
-        
-        功能：快速创建助手角色的消息实例
-        """
-        return cls(role="assistant", content=content)
+        """Create an assistant message"""
+        return cls(role=Role.ASSISTANT, content=content)
 
     @classmethod
     def tool_message(cls, content: str, name, tool_call_id: str) -> "Message":
-        """
-        Create a tool message
-        
-        创建工具消息
-        
-        功能：
-        1. 工具响应：创建工具执行结果消息
-        2. 关联调用：通过ID关联对应的工具调用
-        """
-        return cls(role="tool", content=content, name=name, tool_call_id=tool_call_id)
+        """Create a tool message"""
+        return cls(role=Role.TOOL, content=content, name=name, tool_call_id=tool_call_id)
 
     @classmethod
     def from_tool_calls(
@@ -203,7 +195,7 @@ class Message(BaseModel):
             for call in tool_calls
         ]
         return cls(
-            role="assistant", content=content, tool_calls=formatted_calls, **kwargs
+            role=Role.ASSISTANT, content=content, tool_calls=formatted_calls, **kwargs
         )
 
 
