@@ -1,3 +1,5 @@
+# 规划流程模块
+# 提供任务规划和执行的流程管理，支持步骤状态追踪和多代理协作执行
 import json
 import time
 from enum import Enum
@@ -13,6 +15,7 @@ from app.schema import AgentState, Message, ToolChoice
 from app.tool import PlanningTool
 
 
+# 计划步骤状态枚举，定义步骤可能的执行状态
 class PlanStepStatus(str, Enum):
     """Enum class defining possible statuses of a plan step"""
 
@@ -42,6 +45,7 @@ class PlanStepStatus(str, Enum):
         }
 
 
+# 规划流程实现，管理任务计划的创建、执行和状态追踪
 class PlanningFlow(BaseFlow):
     """A flow that manages planning and execution of tasks using agents."""
 
@@ -51,6 +55,7 @@ class PlanningFlow(BaseFlow):
     active_plan_id: str = Field(default_factory=lambda: f"plan_{int(time.time())}")
     current_step_index: Optional[int] = None
 
+    # 初始化规划流程，设置执行代理和规划工具
     def __init__(
         self, agents: Union[BaseAgent, List[BaseAgent], Dict[str, BaseAgent]], **data
     ):
@@ -74,6 +79,7 @@ class PlanningFlow(BaseFlow):
         if not self.executor_keys:
             self.executor_keys = list(self.agents.keys())
 
+    # 根据步骤类型获取合适的执行代理
     def get_executor(self, step_type: Optional[str] = None) -> BaseAgent:
         """
         Get an appropriate executor agent for the current step.
@@ -91,6 +97,7 @@ class PlanningFlow(BaseFlow):
         # Fallback to primary agent
         return self.primary_agent
 
+    # 执行规划流程，包括计划创建和步骤执行
     async def execute(self, input_text: str) -> str:
         """Execute the planning flow with agents."""
         try:
@@ -133,6 +140,7 @@ class PlanningFlow(BaseFlow):
             logger.error(f"Error in PlanningFlow: {str(e)}")
             return f"Execution failed: {str(e)}"
 
+    # 根据用户输入创建初始规划计划
     async def _create_initial_plan(self, request: str) -> None:
         """Create an initial plan based on the request using the flow's LLM and PlanningTool."""
         logger.info(f"Creating initial plan with ID: {self.active_plan_id}")
@@ -192,6 +200,7 @@ class PlanningFlow(BaseFlow):
             }
         )
 
+    # 获取当前需执行步骤的索引和信息
     async def _get_current_step_info(self) -> tuple[Optional[int], Optional[dict]]:
         """
         Parse the current plan to identify the first non-completed step's index and info.
@@ -256,6 +265,7 @@ class PlanningFlow(BaseFlow):
             logger.warning(f"Error finding current step index: {e}")
             return None, None
 
+    # 使用指定代理执行当前步骤
     async def _execute_step(self, executor: BaseAgent, step_info: dict) -> str:
         """Execute the current step with the specified agent using agent.run()."""
         # Prepare context for the agent with current plan status
@@ -285,6 +295,7 @@ class PlanningFlow(BaseFlow):
             logger.error(f"Error executing step {self.current_step_index}: {e}")
             return f"Error executing step {self.current_step_index}: {str(e)}"
 
+    # 将当前步骤标记为已完成
     async def _mark_step_completed(self) -> None:
         """Mark the current step as completed."""
         if self.current_step_index is None:
@@ -316,6 +327,7 @@ class PlanningFlow(BaseFlow):
                 step_statuses[self.current_step_index] = PlanStepStatus.COMPLETED.value
                 plan_data["step_statuses"] = step_statuses
 
+    # 获取当前计划的格式化文本表示
     async def _get_plan_text(self) -> str:
         """Get the current plan as formatted text."""
         try:
@@ -327,6 +339,7 @@ class PlanningFlow(BaseFlow):
             logger.error(f"Error getting plan: {e}")
             return self._generate_plan_text_from_storage()
 
+    # 从存储中直接生成计划文本表示
     def _generate_plan_text_from_storage(self) -> str:
         """Generate plan text directly from storage if the planning tool fails."""
         try:
@@ -385,6 +398,7 @@ class PlanningFlow(BaseFlow):
             logger.error(f"Error generating plan text from storage: {e}")
             return f"Error: Unable to retrieve plan with ID {self.active_plan_id}"
 
+    # 完成计划并生成总结
     async def _finalize_plan(self) -> str:
         """Finalize the plan and provide a summary using the flow's LLM directly."""
         plan_text = await self._get_plan_text()

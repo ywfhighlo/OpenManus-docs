@@ -1,3 +1,5 @@
+# 日志模块
+# 提供应用程序日志功能，支持控制台输出和文件记录
 import sys
 from datetime import datetime
 
@@ -6,9 +8,11 @@ from loguru import logger as _logger
 from app.config import PROJECT_ROOT
 
 
+# 默认控制台打印日志级别
 _print_level = "INFO"
 
 
+# 定义日志级别和输出方式，返回配置好的logger实例
 def define_log_level(print_level="INFO", logfile_level="DEBUG", name: str = None):
     """Adjust the log level to above level"""
     global _print_level
@@ -26,6 +30,7 @@ def define_log_level(print_level="INFO", logfile_level="DEBUG", name: str = None
     return _logger
 
 
+# 创建全局logger实例，使用默认配置
 logger = define_log_level()
 
 

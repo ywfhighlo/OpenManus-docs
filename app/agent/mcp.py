@@ -23,8 +23,9 @@ class MCPAgent(ToolCallAgent):
     system_prompt: str = SYSTEM_PROMPT
     next_step_prompt: str = NEXT_STEP_PROMPT
 
-    # Initialize MCP tool collection
+    # MCP客户端工具集合，用于管理与服务器的连接和工具
     mcp_clients: MCPClients = Field(default_factory=MCPClients)
+    # 实际可用的工具集合，在初始化时指向mcp_clients
     available_tools: MCPClients = None  # Will be set in initialize()
 
     max_steps: int = 20
@@ -37,6 +38,7 @@ class MCPAgent(ToolCallAgent):
     # Special tool names that should trigger termination
     special_tool_names: List[str] = Field(default_factory=lambda: ["terminate"])
 
+    # 初始化MCP连接，根据类型（stdio或sse）连接到服务器
     async def initialize(
         self,
         connection_type: Optional[str] = None,
@@ -84,6 +86,7 @@ class MCPAgent(ToolCallAgent):
             )
         )
 
+    # 从MCP服务器刷新可用工具列表，检测并记录工具的增删改
     async def _refresh_tools(self) -> Tuple[List[str], List[str]]:
         """Refresh the list of available tools from the MCP server.
 
@@ -131,6 +134,7 @@ class MCPAgent(ToolCallAgent):
 
         return added_tools, removed_tools
 
+    # 思考阶段：检查MCP连接状态，定期刷新工具，然后调用父类的思考逻辑
     async def think(self) -> bool:
         """Process current state and decide next action."""
         # Check MCP session and tools availability
@@ -151,6 +155,7 @@ class MCPAgent(ToolCallAgent):
         # Use the parent class's think method
         return await super().think()
 
+    # 处理特殊工具执行结果，特别是处理多媒体响应
     async def _handle_special_tool(self, name: str, result: Any, **kwargs) -> None:
         """Handle special tool execution and state changes"""
         # First process with parent handler
@@ -164,17 +169,20 @@ class MCPAgent(ToolCallAgent):
                 )
             )
 
+    # 判断是否应结束代理执行（在此类中，仅当工具名称为'terminate'时）
     def _should_finish_execution(self, name: str, **kwargs) -> bool:
         """Determine if tool execution should finish the agent"""
         # Terminate if the tool name is 'terminate'
         return name.lower() == "terminate"
 
+    # 清理MCP连接资源
     async def cleanup(self) -> None:
         """Clean up MCP connection when done."""
         if self.mcp_clients.session:
             await self.mcp_clients.disconnect()
             logger.info("MCP connection closed")
 
+    # 运行代理，确保在结束后执行清理操作
     async def run(self, request: Optional[str] = None) -> str:
         """Run the agent with cleanup when done."""
         try:

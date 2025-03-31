@@ -1,3 +1,5 @@
+# Python代码执行工具模块
+# 提供安全的Python代码执行功能，支持超时限制和输出捕获
 import multiprocessing
 import sys
 from io import StringIO
@@ -6,6 +8,7 @@ from typing import Dict
 from app.tool.base import BaseTool
 
 
+# Python代码执行工具类，用于安全地执行Python代码片段
 class PythonExecute(BaseTool):
     """A tool for executing Python code with timeout and safety restrictions."""
 
@@ -22,6 +25,7 @@ class PythonExecute(BaseTool):
         "required": ["code"],
     }
 
+    # 在独立进程中执行代码，捕获输出和异常
     def _run_code(self, code: str, result_dict: dict, safe_globals: dict) -> None:
         original_stdout = sys.stdout
         try:
@@ -36,6 +40,7 @@ class PythonExecute(BaseTool):
         finally:
             sys.stdout = original_stdout
 
+    # 安全执行Python代码，设置超时限制防止无限循环
     async def execute(
         self,
         code: str,

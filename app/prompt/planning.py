@@ -1,3 +1,5 @@
+# 规划代理提示词模块
+# 定义规划代理使用的系统提示词和下一步提示模板，指导代理创建和执行结构化计划
 PLANNING_SYSTEM_PROMPT = """
 You are an expert Planning Agent tasked with solving problems efficiently through structured plans.
 Your job is:

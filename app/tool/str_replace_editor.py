@@ -1,3 +1,5 @@
+# 字符串替换编辑器工具模块
+# 提供文件查看、创建和编辑功能，支持沙箱操作和编辑历史
 """File and directory manipulation tool with sandbox support."""
 
 from collections import defaultdict
@@ -48,6 +50,7 @@ Notes for using the `str_replace` command:
 """
 
 
+# 可能需要截断长内容的辅助函数
 def maybe_truncate(
     content: str, truncate_after: Optional[int] = MAX_RESPONSE_LEN
 ) -> str:
@@ -57,6 +60,7 @@ def maybe_truncate(
     return content[:truncate_after] + TRUNCATED_MESSAGE
 
 
+# 字符串替换编辑器工具类，支持文件查看、创建和编辑
 class StrReplaceEditor(BaseTool):
     """A tool for viewing, creating, and editing files with sandbox support."""
 
@@ -102,7 +106,7 @@ class StrReplaceEditor(BaseTool):
     _local_operator: LocalFileOperator = LocalFileOperator()
     _sandbox_operator: SandboxFileOperator = SandboxFileOperator()
 
-    # def _get_operator(self, use_sandbox: bool) -> FileOperator:
+    # 根据配置获取适当的文件操作器（沙箱或本地）
     def _get_operator(self) -> FileOperator:
         """Get the appropriate file operator based on execution mode."""
         return (
@@ -111,6 +115,7 @@ class StrReplaceEditor(BaseTool):
             else self._local_operator
         )
 
+    # 执行文件操作命令，支持查看、创建和编辑功能
     async def execute(
         self,
         *,
@@ -163,6 +168,7 @@ class StrReplaceEditor(BaseTool):
 
         return str(result)
 
+    # 验证路径和命令的有效性
     async def validate_path(
         self, command: str, path: Path, operator: FileOperator
     ) -> None:
@@ -193,6 +199,7 @@ class StrReplaceEditor(BaseTool):
                     f"File already exists at: {path}. Cannot overwrite files using command `create`."
                 )
 
+    # 查看文件或目录内容
     async def view(
         self,
         path: PathLike,
@@ -215,6 +222,7 @@ class StrReplaceEditor(BaseTool):
             # File handling
             return await self._view_file(path, operator, view_range)
 
+    # 显示目录内容
     @staticmethod
     async def _view_directory(path: PathLike, operator: FileOperator) -> CLIResult:
         """Display directory contents."""
@@ -231,6 +239,7 @@ class StrReplaceEditor(BaseTool):
 
         return CLIResult(output=stdout, error=stderr)
 
+    # 显示文件内容，可选择指定行范围
     async def _view_file(
         self,
         path: PathLike,
@@ -281,6 +290,7 @@ class StrReplaceEditor(BaseTool):
             output=self._make_output(file_content, str(path), init_line=init_line)
         )
 
+    # 在文件中替换唯一字符串
     async def str_replace(
         self,
         path: PathLike,
@@ -337,6 +347,7 @@ class StrReplaceEditor(BaseTool):
 
         return CLIResult(output=success_msg)
 
+    # 在文件特定行后插入文本
     async def insert(
         self,
         path: PathLike,
@@ -391,6 +402,7 @@ class StrReplaceEditor(BaseTool):
 
         return CLIResult(output=success_msg)
 
+    # 撤销最近的文件编辑
     async def undo_edit(
         self, path: PathLike, operator: FileOperator = None
     ) -> CLIResult:
@@ -405,6 +417,7 @@ class StrReplaceEditor(BaseTool):
             output=f"Last edit to {path} undone successfully. {self._make_output(old_text, str(path))}"
         )
 
+    # 格式化文件内容，添加行号便于显示
     def _make_output(
         self,
         file_content: str,

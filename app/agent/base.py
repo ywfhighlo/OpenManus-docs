@@ -1,3 +1,5 @@
+# Agent基础模块
+# 定义代理的抽象基类和核心行为，包括状态管理、内存操作和执行逻辑
 from abc import ABC, abstractmethod
 from contextlib import asynccontextmanager
 from typing import List, Optional
@@ -40,12 +42,14 @@ class BaseAgent(BaseModel, ABC):
     max_steps: int = Field(default=10, description="Maximum steps before termination")
     current_step: int = Field(default=0, description="Current step in execution")
 
+    # 重复检测阈值，用于识别代理是否陷入循环
     duplicate_threshold: int = 2
 
     class Config:
         arbitrary_types_allowed = True
         extra = "allow"  # Allow extra fields for flexibility in subclasses
 
+    # 初始化代理，确保LLM和Memory实例正确设置
     @model_validator(mode="after")
     def initialize_agent(self) -> "BaseAgent":
         """Initialize agent with default settings if not provided."""
@@ -55,6 +59,7 @@ class BaseAgent(BaseModel, ABC):
             self.memory = Memory()
         return self
 
+    # 状态上下文管理器，安全地切换代理状态并处理异常
     @asynccontextmanager
     async def state_context(self, new_state: AgentState):
         """Context manager for safe agent state transitions.
@@ -81,6 +86,7 @@ class BaseAgent(BaseModel, ABC):
         finally:
             self.state = previous_state  # Revert to previous state
 
+    # 更新代理内存，添加不同角色的消息
     def update_memory(
         self,
         role: ROLE_TYPE,  # type: ignore
@@ -113,6 +119,7 @@ class BaseAgent(BaseModel, ABC):
         kwargs = {"base64_image": base64_image, **(kwargs if role == "tool" else {})}
         self.memory.add_message(message_map[role](content, **kwargs))
 
+    # 执行代理的主循环，处理用户请求并返回执行结果
     async def run(self, request: Optional[str] = None) -> str:
         """Execute the agent's main loop asynchronously.
 
@@ -153,6 +160,7 @@ class BaseAgent(BaseModel, ABC):
         await SANDBOX_CLIENT.cleanup()
         return "\n".join(results) if results else "No steps executed"
 
+    # 执行单个步骤，子类必须实现此方法
     @abstractmethod
     async def step(self) -> str:
         """Execute a single step in the agent's workflow.
@@ -160,6 +168,7 @@ class BaseAgent(BaseModel, ABC):
         Must be implemented by subclasses to define specific behavior.
         """
 
+    # 处理代理陷入循环的情况，通过添加提示来改变策略
     def handle_stuck_state(self):
         """Handle stuck state by adding a prompt to change strategy"""
         stuck_prompt = "\
@@ -167,6 +176,7 @@ class BaseAgent(BaseModel, ABC):
         self.next_step_prompt = f"{stuck_prompt}\n{self.next_step_prompt}"
         logger.warning(f"Agent detected stuck state. Added prompt: {stuck_prompt}")
 
+    # 检测代理是否陷入循环，通过对比最近消息内容
     def is_stuck(self) -> bool:
         """Check if the agent is stuck in a loop by detecting duplicate content"""
         if len(self.memory.messages) < 2:
@@ -185,11 +195,13 @@ class BaseAgent(BaseModel, ABC):
 
         return duplicate_count >= self.duplicate_threshold
 
+    # 获取代理内存中的消息列表
     @property
     def messages(self) -> List[Message]:
         """Retrieve a list of messages from the agent's memory."""
         return self.memory.messages
 
+    # 设置代理内存中的消息列表
     @messages.setter
     def messages(self, value: List[Message]):
         """Set the list of messages in the agent's memory."""

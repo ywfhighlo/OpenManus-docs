@@ -1,3 +1,5 @@
+# ReAct代理模块
+# 实现思考-行动循环模式的代理，将代理决策过程分为独立的思考和行动阶段
 from abc import ABC, abstractmethod
 from typing import Optional
 
@@ -8,6 +10,7 @@ from app.llm import LLM
 from app.schema import AgentState, Memory
 
 
+# 实现ReAct（思考-行动）模式的代理基类，子类需实现think和act方法
 class ReActAgent(BaseAgent, ABC):
     name: str
     description: Optional[str] = None
@@ -22,14 +25,17 @@ class ReActAgent(BaseAgent, ABC):
     max_steps: int = 10
     current_step: int = 0
 
+    # 思考阶段：分析当前状态并决定下一步行动
     @abstractmethod
     async def think(self) -> bool:
         """Process current state and decide next action"""
 
+    # 行动阶段：执行决定的行动
     @abstractmethod
     async def act(self) -> str:
         """Execute decided actions"""
 
+    # 执行单个步骤，包括思考和行动两个阶段
     async def step(self) -> str:
         """Execute a single step: think and act."""
         should_act = await self.think()

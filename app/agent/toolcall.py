@@ -1,3 +1,5 @@
+# 工具调用代理模块
+# 实现支持工具/函数调用的代理基类，提供工具执行和结果处理机制
 import json
 from typing import Any, List, Optional, Union
 
@@ -11,6 +13,7 @@ from app.schema import TOOL_CHOICE_TYPE, AgentState, Message, ToolCall, ToolChoi
 from app.tool import CreateChatCompletion, Terminate, ToolCollection
 
 
+# 工具调用缺失错误消息
 TOOL_CALL_REQUIRED = "Tool calls required but none provided"
 
 
@@ -23,16 +26,21 @@ class ToolCallAgent(ReActAgent):
     system_prompt: str = SYSTEM_PROMPT
     next_step_prompt: str = NEXT_STEP_PROMPT
 
+    # 默认可用工具集合
     available_tools: ToolCollection = ToolCollection(
         CreateChatCompletion(), Terminate()
     )
+    # 工具选择模式（自动、必需或无）
     tool_choices: TOOL_CHOICE_TYPE = ToolChoice.AUTO  # type: ignore
+    # 特殊工具名称列表，通常包含会影响代理状态的工具
     special_tool_names: List[str] = Field(default_factory=lambda: [Terminate().name])
 
+    # 当前工具调用列表和图像缓存
     tool_calls: List[ToolCall] = Field(default_factory=list)
     _current_base64_image: Optional[str] = None
 
     max_steps: int = 30
+    # 观察结果最大长度限制
     max_observe: Optional[Union[int, bool]] = None
 
     async def think(self) -> bool:
@@ -214,6 +222,7 @@ class ToolCallAgent(ReActAgent):
             logger.exception(error_msg)
             return f"Error: {error_msg}"
 
+    # 处理特殊工具的执行结果，可能改变代理状态
     async def _handle_special_tool(self, name: str, result: Any, **kwargs):
         """Handle special tool execution and state changes"""
         if not self._is_special_tool(name):
@@ -224,11 +233,13 @@ class ToolCallAgent(ReActAgent):
             logger.info(f"🏁 Special tool '{name}' has completed the task!")
             self.state = AgentState.FINISHED
 
+    # 判断是否应结束代理执行
     @staticmethod
     def _should_finish_execution(**kwargs) -> bool:
         """Determine if tool execution should finish the agent"""
         return True
 
+    # 检查工具是否为特殊工具
     def _is_special_tool(self, name: str) -> bool:
         """Check if tool name is in special tools list"""
         return name.lower() in [n.lower() for n in self.special_tool_names]

@@ -1,3 +1,5 @@
+# Agent模块初始化文件
+# 导出所有可用的Agent实现类
 from app.agent.base import BaseAgent
 from app.agent.browser import BrowserAgent
 from app.agent.cot import CoTAgent

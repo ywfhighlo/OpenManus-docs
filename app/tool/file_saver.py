@@ -1,3 +1,5 @@
+# 文件保存工具模块
+# 提供将内容保存到本地文件的功能，支持写入和追加模式
 import os
 
 import aiofiles
@@ -6,6 +8,7 @@ from app.config import WORKSPACE_ROOT
 from app.tool.base import BaseTool
 
 
+# 文件保存工具类，用于将文本内容保存到指定路径
 class FileSaver(BaseTool):
     name: str = "file_saver"
     description: str = """Save content to a local file at a specified path.
@@ -33,6 +36,7 @@ The tool accepts content and a file path, and saves the content to that location
         "required": ["content", "file_path"],
     }
 
+    # 将内容保存到指定路径的文件，支持写入和追加模式
     async def execute(self, content: str, file_path: str, mode: str = "w") -> str:
         """
         Save content to a file at the specified path.

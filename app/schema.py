@@ -1,3 +1,5 @@
+# 数据模型和类型定义模块
+# 提供系统中使用的核心数据结构，包括消息、角色、工具选择等模型
 from enum import Enum
 from typing import Any, List, Literal, Optional, Union
 
@@ -13,6 +15,7 @@ class Role(str, Enum):
     TOOL = "tool"
 
 
+# 角色值的元组，用于类型标注
 ROLE_VALUES = tuple(role.value for role in Role)
 ROLE_TYPE = Literal[ROLE_VALUES]  # type: ignore
 
@@ -25,6 +28,7 @@ class ToolChoice(str, Enum):
     REQUIRED = "required"
 
 
+# 工具选择值的元组，用于类型标注
 TOOL_CHOICE_VALUES = tuple(choice.value for choice in ToolChoice)
 TOOL_CHOICE_TYPE = Literal[TOOL_CHOICE_VALUES]  # type: ignore
 
@@ -38,6 +42,7 @@ class AgentState(str, Enum):
     ERROR = "ERROR"
 
 
+# 函数模型，表示工具调用中的函数信息
 class Function(BaseModel):
     name: str
     arguments: str
@@ -51,6 +56,7 @@ class ToolCall(BaseModel):
     function: Function
 
 
+# 消息模型，支持各种角色的消息表示和转换操作
 class Message(BaseModel):
     """Represents a chat message in the conversation"""
 
@@ -156,6 +162,7 @@ class Message(BaseModel):
         )
 
 
+# 内存模型，管理会话中的消息历史
 class Memory(BaseModel):
     messages: List[Message] = Field(default_factory=list)
     max_messages: int = Field(default=100)

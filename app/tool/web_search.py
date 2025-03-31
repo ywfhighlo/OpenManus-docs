@@ -1,3 +1,5 @@
+# 网络搜索工具模块
+# 提供多引擎网络搜索功能，支持多种搜索引擎和自动故障转移
 import asyncio
 from typing import List
 
@@ -15,6 +17,7 @@ from app.tool.search import (
 )
 
 
+# 网络搜索工具类，支持多搜索引擎查询和自动故障转移
 class WebSearch(BaseTool):
     name: str = "web_search"
     description: str = """Perform a web search and return a list of relevant links.
@@ -42,6 +45,7 @@ class WebSearch(BaseTool):
         "bing": BingSearchEngine(),
     }
 
+    # 执行网络搜索，尝试不同搜索引擎并处理失败情况
     async def execute(self, query: str, num_results: int = 10) -> List[str]:
         """
         Execute a Web search and return a list of URLs.
@@ -84,6 +88,7 @@ class WebSearch(BaseTool):
 
         return []
 
+    # 按顺序尝试所有配置的搜索引擎
     async def _try_all_engines(self, query: str, num_results: int) -> List[str]:
         """
         Try all search engines in the configured order.
@@ -128,6 +133,7 @@ class WebSearch(BaseTool):
             logger.error(f"All search engines failed: {', '.join(failed_engines)}")
         return []
 
+    # 确定搜索引擎使用顺序，基于配置的首选引擎和备用引擎
     def _get_engine_order(self) -> List[str]:
         """
         Determines the order in which to try search engines.
@@ -160,6 +166,7 @@ class WebSearch(BaseTool):
 
         return engine_order
 
+    # 使用指定搜索引擎执行查询，支持自动重试
     @retry(
         stop=stop_after_attempt(3),
         wait=wait_exponential(multiplier=1, min=1, max=10),

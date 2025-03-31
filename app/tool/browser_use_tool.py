@@ -1,3 +1,5 @@
+# 浏览器操作工具模块
+# 提供完整的浏览器自动化功能，支持导航、元素交互、内容提取和标签页管理
 import asyncio
 import base64
 import json
@@ -49,6 +51,7 @@ Utility:
 Context = TypeVar("Context")
 
 
+# 浏览器操作工具类，实现多种浏览器自动化操作，支持网页交互和内容提取
 class BrowserUseTool(BaseTool, Generic[Context]):
     name: str = "browser_use"
     description: str = _BROWSER_DESCRIPTION
@@ -151,6 +154,7 @@ class BrowserUseTool(BaseTool, Generic[Context]):
             raise ValueError("Parameters cannot be empty")
         return v
 
+    # 确保浏览器和上下文已初始化，支持代理和自定义配置
     async def _ensure_browser_initialized(self) -> BrowserContext:
         """Ensure browser and context are initialized."""
         if self.browser is None:
@@ -200,6 +204,7 @@ class BrowserUseTool(BaseTool, Generic[Context]):
 
         return self.context
 
+    # 执行浏览器操作，根据不同动作类型调用相应的浏览器功能
     async def execute(
         self,
         action: str,
@@ -546,6 +551,7 @@ Page content:
             except Exception as e:
                 return ToolResult(error=f"Browser action '{action}' failed: {str(e)}")
 
+    # 获取当前浏览器状态，包括URL、标题、标签页和交互元素信息
     async def get_current_state(
         self, context: Optional[BrowserContext] = None
     ) -> ToolResult:
@@ -608,6 +614,7 @@ Page content:
         except Exception as e:
             return ToolResult(error=f"Failed to get browser state: {str(e)}")
 
+    # 清理浏览器资源，关闭页面和浏览器实例
     async def cleanup(self):
         """Clean up browser resources."""
         async with self.lock:
@@ -619,6 +626,7 @@ Page content:
                 await self.browser.close()
                 self.browser = None
 
+    # 对象销毁时确保清理资源
     def __del__(self):
         """Ensure cleanup when object is destroyed."""
         if self.browser is not None or self.context is not None:
@@ -629,6 +637,7 @@ Page content:
                 loop.run_until_complete(self.cleanup())
                 loop.close()
 
+    # 创建带有特定上下文的浏览器工具实例
     @classmethod
     def create_with_context(cls, context: Context) -> "BrowserUseTool[Context]":
         """Factory method to create a BrowserUseTool with a specific context."""

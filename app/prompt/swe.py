@@ -1,3 +1,5 @@
+# 软件工程代理提示词模块
+# 定义软件工程代理使用的系统提示词和下一步提示模板，指导代理执行命令和编辑文件
 SYSTEM_PROMPT = """SETTING: You are an autonomous programmer, and you're working directly in the command line with a special interface.
 
 The special interface consists of a file editor that shows you {{WINDOW}} lines of a file at a time.

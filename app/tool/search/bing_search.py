@@ -1,3 +1,5 @@
+# 必应搜索引擎模块
+# 提供必应搜索引擎的实现，支持网页搜索和结果解析
 from typing import List
 
 import requests
@@ -35,6 +37,7 @@ BING_HOST_URL = "https://www.bing.com"
 BING_SEARCH_URL = "https://www.bing.com/search?q="
 
 
+# 必应搜索引擎实现类
 class BingSearchEngine(WebSearchEngine):
     session: requests.Session = None
 
@@ -44,6 +47,7 @@ class BingSearchEngine(WebSearchEngine):
         self.session = requests.Session()
         self.session.headers.update(HEADERS)
 
+    # 同步执行必应搜索，获取匹配查询的URL列表
     def _search_sync(self, query: str, num_results: int = 10) -> List[str]:
         """
         Synchronous Bing search implementation to retrieve a list of URLs matching a query.
@@ -79,6 +83,7 @@ class BingSearchEngine(WebSearchEngine):
 
         return list_result[:num_results]
 
+    # 解析必应搜索结果HTML，提取搜索结果和下一页URL
     def _parse_html(self, url: str, rank_start: int = 0, first: int = 1) -> tuple:
         """
         Parse Bing search result HTML synchronously to extract search results and the next page URL.
@@ -141,6 +146,7 @@ class BingSearchEngine(WebSearchEngine):
             logger.warning(f"Error parsing HTML: {e}")
             return [], None
 
+    # 执行必应搜索，返回URL列表
     def perform_search(self, query, num_results=10, *args, **kwargs):
         """Bing search engine."""
         return self._search_sync(query, num_results=num_results)

@@ -1,3 +1,5 @@
+# LLM交互模块
+# 提供与大型语言模型通信的核心功能，包括令牌计数、消息处理和API调用
 import math
 from typing import Dict, List, Optional, Union
 
@@ -31,7 +33,9 @@ from app.schema import (
 )
 
 
+# 支持推理能力的模型列表 (通常指较小或专门用于生成思考步骤的模型)
 REASONING_MODELS = ["o1", "o3-mini"]
+# 支持多模态（图文）输入的模型列表
 MULTIMODAL_MODELS = [
     "gpt-4-vision-preview",
     "gpt-4o",
@@ -42,6 +46,7 @@ MULTIMODAL_MODELS = [
 ]
 
 
+# 令牌计数器类，用于精确计算文本和图像的令牌数量
 class TokenCounter:
     # Token constants
     BASE_MESSAGE_TOKENS = 4
@@ -178,9 +183,11 @@ class TokenCounter:
         return total_tokens
 
 
+# LLM客户端类，提供与各种语言模型API交互的统一接口，支持单例模式
 class LLM:
     _instances: Dict[str, "LLM"] = {}
 
+    # 实现单例模式，确保每个配置名称只创建一个LLM实例
     def __new__(
         cls, config_name: str = "default", llm_config: Optional[LLMSettings] = None
     ):
@@ -190,6 +197,7 @@ class LLM:
             cls._instances[config_name] = instance
         return cls._instances[config_name]
 
+    # 初始化LLM客户端，设置API参数并创建相应的OpenAI客户端
     def __init__(
         self, config_name: str = "default", llm_config: Optional[LLMSettings] = None
     ):
@@ -220,6 +228,7 @@ class LLM:
                 # If the model is not in tiktoken's presets, use cl100k_base as default
                 self.tokenizer = tiktoken.get_encoding("cl100k_base")
 
+            # 根据API类型创建相应的客户端
             if self.api_type == "azure":
                 self.client = AsyncAzureOpenAI(
                     base_url=self.base_url,
@@ -233,17 +242,21 @@ class LLM:
 
             self.token_counter = TokenCounter(self.tokenizer)
 
+    # 计算文本中的令牌数量
     def count_tokens(self, text: str) -> int:
         """Calculate the number of tokens in a text"""
         if not text:
             return 0
         return len(self.tokenizer.encode(text))
 
+    # 计算消息列表中的总令牌数量
     def count_message_tokens(self, messages: List[dict]) -> int:
+        """Calculate the total tokens for a list of messages."""
         return self.token_counter.count_message_tokens(messages)
 
+    # 更新累计的输入和完成令牌计数
     def update_token_count(self, input_tokens: int, completion_tokens: int = 0) -> None:
-        """Update token counts"""
+        """Update the total token count."""
         # Only track tokens if max_input_tokens is set
         self.total_input_tokens += input_tokens
         self.total_completion_tokens += completion_tokens
@@ -253,15 +266,17 @@ class LLM:
             f"Total={input_tokens + completion_tokens}, Cumulative Total={self.total_input_tokens + self.total_completion_tokens}"
         )
 
+    # 检查输入令牌是否超过限制
     def check_token_limit(self, input_tokens: int) -> bool:
-        """Check if token limits are exceeded"""
+        """Check if adding input_tokens exceeds the maximum input token limit."""
         if self.max_input_tokens is not None:
             return (self.total_input_tokens + input_tokens) <= self.max_input_tokens
         # If max_input_tokens is not set, always return True
         return True
 
+    # 获取超出限制的错误消息
     def get_limit_error_message(self, input_tokens: int) -> str:
-        """Generate error message for token limit exceeded"""
+        """Generate an error message for exceeding the token limit."""
         if (
             self.max_input_tokens is not None
             and (self.total_input_tokens + input_tokens) > self.max_input_tokens
@@ -270,31 +285,13 @@ class LLM:
 
         return "Token limit exceeded"
 
+    # 格式化消息列表，处理图像数据
     @staticmethod
     def format_messages(
         messages: List[Union[dict, Message]], supports_images: bool = False
     ) -> List[dict]:
-        """
-        Format messages for LLM by converting them to OpenAI message format.
-
-        Args:
-            messages: List of messages that can be either dict or Message objects
-            supports_images: Flag indicating if the target model supports image inputs
-
-        Returns:
-            List[dict]: List of formatted messages in OpenAI format
-
-        Raises:
-            ValueError: If messages are invalid or missing required fields
-            TypeError: If unsupported message types are provided
-
-        Examples:
-            >>> msgs = [
-            ...     Message.system_message("You are a helpful assistant"),
-            ...     {"role": "user", "content": "Hello"},
-            ...     Message.user_message("How are you?")
-            ... ]
-            >>> formatted = LLM.format_messages(msgs)
+        """Formats messages into the structure expected by the API,
+        handling image data if supported.
         """
         formatted_messages = []
 
@@ -358,6 +355,7 @@ class LLM:
 
         return formatted_messages
 
+    # 执行LLM调用（文本模式），带重试逻辑
     @retry(
         wait=wait_random_exponential(min=1, max=60),
         stop=stop_after_attempt(6),
@@ -372,24 +370,7 @@ class LLM:
         stream: bool = True,
         temperature: Optional[float] = None,
     ) -> str:
-        """
-        Send a prompt to the LLM and get the response.
-
-        Args:
-            messages: List of conversation messages
-            system_msgs: Optional system messages to prepend
-            stream (bool): Whether to stream the response
-            temperature (float): Sampling temperature for the response
-
-        Returns:
-            str: The generated response
-
-        Raises:
-            TokenLimitExceeded: If token limits are exceeded
-            ValueError: If messages are invalid or response is empty
-            OpenAIError: If API call fails after retries
-            Exception: For unexpected errors
-        """
+        """Send a request to the LLM and get a response (text-only)."""
         try:
             # Check if the model supports images
             supports_images = self.model in MULTIMODAL_MODELS
@@ -485,6 +466,7 @@ class LLM:
             logger.exception(f"Unexpected error in ask")
             raise
 
+    # 执行LLM调用（图像模式），带重试逻辑
     @retry(
         wait=wait_random_exponential(min=1, max=60),
         stop=stop_after_attempt(6),
@@ -500,25 +482,7 @@ class LLM:
         stream: bool = False,
         temperature: Optional[float] = None,
     ) -> str:
-        """
-        Send a prompt with images to the LLM and get the response.
-
-        Args:
-            messages: List of conversation messages
-            images: List of image URLs or image data dictionaries
-            system_msgs: Optional system messages to prepend
-            stream (bool): Whether to stream the response
-            temperature (float): Sampling temperature for the response
-
-        Returns:
-            str: The generated response
-
-        Raises:
-            TokenLimitExceeded: If token limits are exceeded
-            ValueError: If messages are invalid or response is empty
-            OpenAIError: If API call fails after retries
-            Exception: For unexpected errors
-        """
+        """Send a request to the LLM with image inputs and get a response."""
         try:
             # For ask_with_images, we always set supports_images to True because
             # this method should only be called with models that support images
@@ -641,6 +605,7 @@ class LLM:
             logger.error(f"Unexpected error in ask_with_images: {e}")
             raise
 
+    # 执行LLM调用（工具模式），带重试逻辑
     @retry(
         wait=wait_random_exponential(min=1, max=60),
         stop=stop_after_attempt(6),
@@ -658,27 +623,7 @@ class LLM:
         temperature: Optional[float] = None,
         **kwargs,
     ) -> ChatCompletionMessage | None:
-        """
-        Ask LLM using functions/tools and return the response.
-
-        Args:
-            messages: List of conversation messages
-            system_msgs: Optional system messages to prepend
-            timeout: Request timeout in seconds
-            tools: List of tools to use
-            tool_choice: Tool choice strategy
-            temperature: Sampling temperature for the response
-            **kwargs: Additional completion arguments
-
-        Returns:
-            ChatCompletionMessage: The model's response
-
-        Raises:
-            TokenLimitExceeded: If token limits are exceeded
-            ValueError: If tools, tool_choice, or messages are invalid
-            OpenAIError: If API call fails after retries
-            Exception: For unexpected errors
-        """
+        """Send a request to the LLM with tool options and get a response, potentially including tool calls."""
         try:
             # Validate tool_choice
             if tool_choice not in TOOL_CHOICE_VALUES:

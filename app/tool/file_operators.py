@@ -1,3 +1,5 @@
+# 文件操作工具模块
+# 提供本地和沙箱环境下的文件操作接口和实现，支持读写和命令执行
 """File operation interfaces and implementations for local and sandbox environments."""
 
 import asyncio
@@ -12,6 +14,7 @@ from app.sandbox.client import SANDBOX_CLIENT
 PathLike = Union[str, Path]
 
 
+# 文件操作接口，定义不同环境下文件操作的通用方法
 @runtime_checkable
 class FileOperator(Protocol):
     """Interface for file operations in different environments."""
@@ -39,11 +42,13 @@ class FileOperator(Protocol):
         ...
 
 
+# 本地文件操作实现，在本地文件系统上执行读写和命令操作
 class LocalFileOperator(FileOperator):
     """File operations implementation for local filesystem."""
 
     encoding: str = "utf-8"
 
+    # 从本地文件读取内容
     async def read_file(self, path: PathLike) -> str:
         """Read content from a local file."""
         try:
@@ -51,6 +56,7 @@ class LocalFileOperator(FileOperator):
         except Exception as e:
             raise ToolError(f"Failed to read {path}: {str(e)}") from None
 
+    # 将内容写入本地文件
     async def write_file(self, path: PathLike, content: str) -> None:
         """Write content to a local file."""
         try:
@@ -58,14 +64,17 @@ class LocalFileOperator(FileOperator):
         except Exception as e:
             raise ToolError(f"Failed to write to {path}: {str(e)}") from None
 
+    # 检查本地路径是否为目录
     async def is_directory(self, path: PathLike) -> bool:
         """Check if path points to a directory."""
         return Path(path).is_dir()
 
+    # 检查本地路径是否存在
     async def exists(self, path: PathLike) -> bool:
         """Check if path exists."""
         return Path(path).exists()
 
+    # 在本地运行shell命令并返回结果
     async def run_command(
         self, cmd: str, timeout: Optional[float] = 120.0
     ) -> Tuple[int, str, str]:
@@ -93,17 +102,20 @@ class LocalFileOperator(FileOperator):
             ) from exc
 
 
+# 沙箱文件操作实现，在沙箱环境中执行受限的文件操作
 class SandboxFileOperator(FileOperator):
     """File operations implementation for sandbox environment."""
 
     def __init__(self):
         self.sandbox_client = SANDBOX_CLIENT
 
+    # 确保沙箱已初始化
     async def _ensure_sandbox_initialized(self):
         """Ensure sandbox is initialized."""
         if not self.sandbox_client.sandbox:
             await self.sandbox_client.create(config=SandboxSettings())
 
+    # 从沙箱中的文件读取内容
     async def read_file(self, path: PathLike) -> str:
         """Read content from a file in sandbox."""
         await self._ensure_sandbox_initialized()
@@ -112,6 +124,7 @@ class SandboxFileOperator(FileOperator):
         except Exception as e:
             raise ToolError(f"Failed to read {path} in sandbox: {str(e)}") from None
 
+    # 将内容写入沙箱中的文件
     async def write_file(self, path: PathLike, content: str) -> None:
         """Write content to a file in sandbox."""
         await self._ensure_sandbox_initialized()
@@ -120,6 +133,7 @@ class SandboxFileOperator(FileOperator):
         except Exception as e:
             raise ToolError(f"Failed to write to {path} in sandbox: {str(e)}") from None
 
+    # 检查沙箱中的路径是否为目录
     async def is_directory(self, path: PathLike) -> bool:
         """Check if path points to a directory in sandbox."""
         await self._ensure_sandbox_initialized()
@@ -128,6 +142,7 @@ class SandboxFileOperator(FileOperator):
         )
         return result.strip() == "true"
 
+    # 检查沙箱中的路径是否存在
     async def exists(self, path: PathLike) -> bool:
         """Check if path exists in sandbox."""
         await self._ensure_sandbox_initialized()
@@ -136,6 +151,7 @@ class SandboxFileOperator(FileOperator):
         )
         return result.strip() == "true"
 
+    # 在沙箱环境中运行命令并返回结果
     async def run_command(
         self, cmd: str, timeout: Optional[float] = 120.0
     ) -> Tuple[int, str, str]:

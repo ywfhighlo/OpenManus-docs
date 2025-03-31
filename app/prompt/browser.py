@@ -1,3 +1,5 @@
+# 浏览器代理提示词模块
+# 为浏览器自动化代理提供系统提示词和下一步提示模板，指导代理执行网页操作任务
 SYSTEM_PROMPT = """\
 You are an AI agent designed to automate browser tasks. Your goal is to accomplish the ultimate task following the rules.
 
@@ -70,6 +72,7 @@ Common action sequences:
 Your responses must be always JSON with the specified format.
 """
 
+# 下一步提示模板，指导代理根据当前状态确定下一步操作
 NEXT_STEP_PROMPT = """
 What should I do next to achieve my goal?
 

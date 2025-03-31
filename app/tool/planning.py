@@ -1,3 +1,5 @@
+# 规划工具模块
+# 提供计划创建和管理功能，支持步骤追踪和状态更新，用于复杂任务的分解与执行
 # tool/planning.py
 from typing import Dict, List, Literal, Optional
 
@@ -11,6 +13,7 @@ The tool provides functionality for creating plans, updating plan steps, and tra
 """
 
 
+# 规划工具类，提供计划的创建、更新和管理功能
 class PlanningTool(BaseTool):
     """
     A planning tool that allows the agent to create and manage plans for solving complex tasks.
@@ -69,6 +72,7 @@ class PlanningTool(BaseTool):
     plans: dict = {}  # Dictionary to store plans by plan_id
     _current_plan_id: Optional[str] = None  # Track the current active plan
 
+    # 执行规划工具，根据命令调用相应的功能
     async def execute(
         self,
         *,
@@ -117,6 +121,7 @@ class PlanningTool(BaseTool):
                 f"Unrecognized command: {command}. Allowed commands are: create, update, list, get, set_active, mark_step, delete"
             )
 
+    # 创建新的计划，设置标题和步骤
     def _create_plan(
         self, plan_id: Optional[str], title: Optional[str], steps: Optional[List[str]]
     ) -> ToolResult:
@@ -157,6 +162,7 @@ class PlanningTool(BaseTool):
             output=f"Plan created successfully with ID: {plan_id}\n\n{self._format_plan(plan)}"
         )
 
+    # 更新现有计划的标题或步骤
     def _update_plan(
         self, plan_id: Optional[str], title: Optional[str], steps: Optional[List[str]]
     ) -> ToolResult:
@@ -206,6 +212,7 @@ class PlanningTool(BaseTool):
             output=f"Plan updated successfully: {plan_id}\n\n{self._format_plan(plan)}"
         )
 
+    # 列出所有可用的计划
     def _list_plans(self) -> ToolResult:
         """List all available plans."""
         if not self.plans:
@@ -225,6 +232,7 @@ class PlanningTool(BaseTool):
 
         return ToolResult(output=output)
 
+    # 获取特定计划的详细信息
     def _get_plan(self, plan_id: Optional[str]) -> ToolResult:
         """Get details of a specific plan."""
         if not plan_id:
@@ -241,6 +249,7 @@ class PlanningTool(BaseTool):
         plan = self.plans[plan_id]
         return ToolResult(output=self._format_plan(plan))
 
+    # 设置当前活动计划
     def _set_active_plan(self, plan_id: Optional[str]) -> ToolResult:
         """Set a plan as the active plan."""
         if not plan_id:
@@ -254,6 +263,7 @@ class PlanningTool(BaseTool):
             output=f"Plan '{plan_id}' is now the active plan.\n\n{self._format_plan(self.plans[plan_id])}"
         )
 
+    # 标记步骤状态和添加备注
     def _mark_step(
         self,
         plan_id: Optional[str],
@@ -303,6 +313,7 @@ class PlanningTool(BaseTool):
             output=f"Step {step_index} updated in plan '{plan_id}'.\n\n{self._format_plan(plan)}"
         )
 
+    # 删除指定的计划
     def _delete_plan(self, plan_id: Optional[str]) -> ToolResult:
         """Delete a plan."""
         if not plan_id:
@@ -319,6 +330,7 @@ class PlanningTool(BaseTool):
 
         return ToolResult(output=f"Plan '{plan_id}' has been deleted.")
 
+    # 格式化计划信息用于显示
     def _format_plan(self, plan: Dict) -> str:
         """Format a plan for display."""
         output = f"Plan: {plan['title']} (ID: {plan['plan_id']})\n"

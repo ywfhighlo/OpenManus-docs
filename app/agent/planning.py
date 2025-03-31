@@ -33,12 +33,14 @@ class PlanningAgent(ToolCallAgent):
     tool_calls: List[ToolCall] = Field(default_factory=list)
     active_plan_id: Optional[str] = Field(default=None)
 
-    # Add a dictionary to track the step status for each tool call
+    # 跟踪每个工具调用对应的计划步骤执行状态
     step_execution_tracker: Dict[str, Dict] = Field(default_factory=dict)
+    # 当前正在处理的计划步骤索引
     current_step_index: Optional[int] = None
 
     max_steps: int = 20
 
+    # 初始化时确保PlanningTool可用，并设置默认的活动计划ID
     @model_validator(mode="after")
     def initialize_plan_and_verify_tools(self) -> "PlanningAgent":
         """Initialize the agent with a default plan ID and validate required tools."""
@@ -49,6 +51,8 @@ class PlanningAgent(ToolCallAgent):
 
         return self
 
+    # 思考阶段：获取当前计划状态，将其注入提示，然后调用父类思考逻辑
+    # 同时，将即将执行的工具调用与当前步骤索引关联起来用于跟踪
     async def think(self) -> bool:
         """Decide the next action based on plan status."""
         prompt = (
@@ -80,6 +84,8 @@ class PlanningAgent(ToolCallAgent):
 
         return result
 
+    # 行动阶段：执行父类的行动逻辑（工具调用），并在之后更新计划状态
+    # 关联工具调用的执行结果，并标记对应计划步骤为完成
     async def act(self) -> str:
         """Execute a step and track its completion status."""
         result = await super().act()
@@ -102,6 +108,7 @@ class PlanningAgent(ToolCallAgent):
 
         return result
 
+    # 获取当前活动计划的文本表示和状态
     async def get_plan(self) -> str:
         """Retrieve the current plan status."""
         if not self.active_plan_id:
@@ -113,12 +120,14 @@ class PlanningAgent(ToolCallAgent):
         )
         return result.output if hasattr(result, "output") else str(result)
 
+    # 运行代理，如果提供了初始请求，则先创建计划
     async def run(self, request: Optional[str] = None) -> str:
         """Run the agent with an optional initial request."""
         if request:
             await self.create_initial_plan(request)
         return await super().run()
 
+    # 根据完成的工具调用更新计划步骤的状态为"completed"
     async def update_plan_status(self, tool_call_id: str) -> None:
         """
         Update the current plan progress based on completed tool execution.
@@ -155,6 +164,8 @@ class PlanningAgent(ToolCallAgent):
         except Exception as e:
             logger.warning(f"Failed to update plan status: {e}")
 
+    # 解析当前计划文本，查找第一个未完成（not_started或in_progress）的步骤索引
+    # 并将其标记为in_progress
     async def _get_current_step_index(self) -> Optional[int]:
         """
         Parse the current plan to identify the first non-completed step's index.
@@ -198,6 +209,7 @@ class PlanningAgent(ToolCallAgent):
             logger.warning(f"Error finding current step index: {e}")
             return None
 
+    # 根据用户初始请求创建计划
     async def create_initial_plan(self, request: str) -> None:
         """Create an initial plan based on the request."""
         logger.info(f"Creating initial plan with ID: {self.active_plan_id}")

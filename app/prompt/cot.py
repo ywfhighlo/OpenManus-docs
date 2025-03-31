@@ -1,3 +1,5 @@
+# 思维链代理提示词模块
+# 定义思维链代理使用的系统提示词和下一步提示模板，指导代理进行分步推理
 SYSTEM_PROMPT = """You are an assistant focused on Chain of Thought reasoning. For each question, please follow these steps:
 
 1. Break down the problem: Divide complex problems into smaller, more manageable parts

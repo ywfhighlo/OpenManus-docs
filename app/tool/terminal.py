@@ -1,3 +1,5 @@
+# 终端命令执行工具模块
+# 提供安全、异步的系统命令执行功能，支持目录切换和命令序列执行
 import asyncio
 import os
 import shlex
@@ -6,6 +8,7 @@ from typing import Optional
 from app.tool.base import BaseTool, CLIResult
 
 
+# 终端工具类，允许代理执行系统命令并获取输出结果
 class Terminal(BaseTool):
     name: str = "execute_command"
     description: str = """Request to execute a CLI command on the system.
@@ -29,6 +32,7 @@ Note: You MUST append a `sleep 0.05` to the end of the command for commands that
     current_path: str = os.getcwd()
     lock: asyncio.Lock = asyncio.Lock()
 
+    # 执行终端命令，支持分割多条命令并保持目录上下文
     async def execute(self, command: str) -> CLIResult:
         """
         Execute a terminal command asynchronously with persistent context.
@@ -83,6 +87,7 @@ Note: You MUST append a `sleep 0.05` to the end of the command for commands that
         final_output.error = final_output.error.rstrip()
         return final_output
 
+    # 在指定的Conda环境中执行命令
     async def execute_in_env(self, env_name: str, command: str) -> CLIResult:
         """
         Execute a terminal command asynchronously within a specified Conda environment.
@@ -102,6 +107,7 @@ Note: You MUST append a `sleep 0.05` to the end of the command for commands that
 
         return await self.execute(conda_command)
 
+    # 处理cd命令，更新当前工作目录
     async def _handle_cd_command(self, command: str) -> CLIResult:
         """
         Handle 'cd' commands to change the current path.
@@ -135,6 +141,7 @@ Note: You MUST append a `sleep 0.05` to the end of the command for commands that
         except Exception as e:
             return CLIResult(output="", error=str(e))
 
+    # 对命令进行安全验证，禁止危险操作
     @staticmethod
     def _sanitize_command(command: str) -> str:
         """
@@ -160,6 +167,7 @@ Note: You MUST append a `sleep 0.05` to the end of the command for commands that
         # Additional sanitization logic can be added here
         return command
 
+    # 关闭正在运行的进程
     async def close(self):
         """Close the persistent shell process if it exists."""
         async with self.lock:

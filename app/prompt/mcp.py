@@ -1,3 +1,5 @@
+# MCP代理提示词模块
+# 为MCP代理提供系统提示词和错误处理提示词，指导代理使用模型上下文协议服务
 """Prompts for the MCP Agent."""
 
 SYSTEM_PROMPT = """You are an AI assistant with access to a Model Context Protocol (MCP) server.
@@ -20,12 +22,14 @@ Follow these guidelines:
 Remember to clearly explain your reasoning and actions to the user.
 """
 
+# 下一步提示模板，指导代理确定下一步行动
 NEXT_STEP_PROMPT = """Based on the current state and available tools, what should be done next?
 Think step by step about the problem and identify which MCP tool would be most helpful for the current stage.
 If you've already made progress, consider what additional information you need or what actions would move you closer to completing the task.
 """
 
 # Additional specialized prompts
+# 工具错误提示模板，帮助代理处理工具调用错误
 TOOL_ERROR_PROMPT = """You encountered an error with the tool '{tool_name}'.
 Try to understand what went wrong and correct your approach.
 Common issues include:
@@ -37,6 +41,7 @@ Common issues include:
 Please check the tool specifications and try again with corrected parameters.
 """
 
+# 多媒体响应提示模板，指导代理处理图像等多媒体内容
 MULTIMEDIA_RESPONSE_PROMPT = """You've received a multimedia response (image, audio, etc.) from the tool '{tool_name}'.
 This content has been processed and described for you.
 Use this information to continue the task or provide insights to the user.

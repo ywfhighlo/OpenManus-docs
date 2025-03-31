@@ -1,3 +1,5 @@
+# 思维链代理模块
+# 实现基于思维链(Chain-of-Thought)推理的代理，专注于展示大语言模型的思考过程
 from typing import Optional
 
 from pydantic import Field

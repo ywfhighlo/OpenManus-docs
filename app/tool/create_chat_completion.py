@@ -1,3 +1,5 @@
+# 聊天完成工具模块
+# 提供结构化输出格式转换功能，支持多种输出类型定义和转换
 from typing import Any, List, Optional, Type, Union, get_args, get_origin
 
 from pydantic import BaseModel, Field
@@ -5,6 +7,7 @@ from pydantic import BaseModel, Field
 from app.tool import BaseTool
 
 
+# 聊天完成工具，用于创建格式化的输出内容，支持类型转换和验证
 class CreateChatCompletion(BaseTool):
     name: str = "create_chat_completion"
     description: str = (
@@ -23,12 +26,14 @@ class CreateChatCompletion(BaseTool):
     response_type: Optional[Type] = None
     required: List[str] = Field(default_factory=lambda: ["response"])
 
+    # 初始化工具，设置响应类型
     def __init__(self, response_type: Optional[Type] = str):
         """Initialize with a specific response type."""
         super().__init__()
         self.response_type = response_type
         self.parameters = self._build_parameters()
 
+    # 构建参数模式，基于响应类型生成适当的JSON模式
     def _build_parameters(self) -> dict:
         """Build parameters schema based on response type."""
         if self.response_type == str:
@@ -55,6 +60,7 @@ class CreateChatCompletion(BaseTool):
 
         return self._create_type_schema(self.response_type)
 
+    # 为指定类型创建JSON模式
     def _create_type_schema(self, type_hint: Type) -> dict:
         """Create a JSON schema for the given type."""
         origin = get_origin(type_hint)
@@ -107,6 +113,7 @@ class CreateChatCompletion(BaseTool):
 
         return self._build_parameters()
 
+    # 获取单个类型的类型信息
     def _get_type_info(self, type_hint: Type) -> dict:
         """Get type information for a single type."""
         if isinstance(type_hint, type) and issubclass(type_hint, BaseModel):
@@ -117,6 +124,7 @@ class CreateChatCompletion(BaseTool):
             "description": f"Value of type {getattr(type_hint, '__name__', 'any')}",
         }
 
+    # 为联合类型创建JSON模式
     def _create_union_schema(self, types: tuple) -> dict:
         """Create schema for Union types."""
         return {
@@ -127,6 +135,7 @@ class CreateChatCompletion(BaseTool):
             "required": self.required,
         }
 
+    # 执行聊天完成操作，将输入参数转换为指定类型的响应
     async def execute(self, required: list | None = None, **kwargs) -> Any:
         """Execute the chat completion with type conversion.
 

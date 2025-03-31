@@ -1,3 +1,5 @@
+# Bash命令执行工具模块
+# 提供长期运行的交互式Bash shell会话功能，支持命令执行和标准输出/错误获取
 import asyncio
 import os
 from typing import Optional
@@ -13,6 +15,7 @@ _BASH_DESCRIPTION = """Execute a bash command in the terminal.
 """
 
 
+# Bash会话类，管理与shell进程的交互和通信
 class _BashSession:
     """A session of a bash shell."""
 
@@ -28,6 +31,7 @@ class _BashSession:
         self._started = False
         self._timed_out = False
 
+    # 启动Bash进程并建立会话连接
     async def start(self):
         if self._started:
             return
@@ -44,6 +48,7 @@ class _BashSession:
 
         self._started = True
 
+    # 终止当前会话的Bash进程
     def stop(self):
         """Terminate the bash shell."""
         if not self._started:
@@ -52,6 +57,7 @@ class _BashSession:
             return
         self._process.terminate()
 
+    # 在Bash会话中执行命令并获取结果
     async def run(self, command: str):
         """Execute a command in the bash shell."""
         if not self._started:
@@ -113,6 +119,8 @@ class _BashSession:
         return CLIResult(output=output, error=error)
 
 
+# Bash工具类，提供执行Bash命令的工具接口
+# 使用_BashSession管理底层shell进程
 class Bash(BaseTool):
     """A tool for executing bash commands"""
 
@@ -131,6 +139,10 @@ class Bash(BaseTool):
 
     _session: Optional[_BashSession] = None
 
+    # 执行Bash命令
+    # 如果指定restart=True，则停止现有会话并启动新会话。
+    # 如果会话未启动，则自动启动。
+    # 如果提供了command，则在当前会话中运行该命令。
     async def execute(
         self, command: str | None = None, restart: bool = False, **kwargs
     ) -> CLIResult:

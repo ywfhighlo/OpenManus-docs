@@ -1,3 +1,7 @@
+# 搜索引擎基础模块
+# 定义网络搜索引擎的基础接口和通用功能
+
+# 网络搜索引擎基类，定义搜索功能接口
 class WebSearchEngine(object):
     def perform_search(
         self, query: str, num_results: int = 10, *args, **kwargs

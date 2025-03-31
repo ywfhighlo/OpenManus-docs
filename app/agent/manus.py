@@ -1,3 +1,5 @@
+# Manus代理模块
+# 通用多功能代理实现，集成多种工具能力，能够处理复杂任务
 from pydantic import Field
 
 from app.agent.browser import BrowserAgent

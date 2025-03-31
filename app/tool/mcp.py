@@ -1,3 +1,5 @@
+# MCP工具模块
+# 提供与MCP服务器的连接和工具调用功能，支持SSE和标准输入输出通信
 from contextlib import AsyncExitStack
 from typing import List, Optional
 
@@ -11,11 +13,13 @@ from app.tool.base import BaseTool, ToolResult
 from app.tool.tool_collection import ToolCollection
 
 
+# MCP客户端工具，代理远程MCP服务器上可调用的工具
 class MCPClientTool(BaseTool):
     """Represents a tool proxy that can be called on the MCP server from the client side."""
 
     session: Optional[ClientSession] = None
 
+    # 通过MCP会话执行远程工具调用
     async def execute(self, **kwargs) -> ToolResult:
         """Execute the tool by making a remote call to the MCP server."""
         if not self.session:
@@ -31,6 +35,7 @@ class MCPClientTool(BaseTool):
             return ToolResult(error=f"Error executing tool: {str(e)}")
 
 
+# MCP客户端工具集合，管理MCP服务器连接及可用工具
 class MCPClients(ToolCollection):
     """
     A collection of tools that connects to an MCP server and manages available tools through the Model Context Protocol.
@@ -40,11 +45,13 @@ class MCPClients(ToolCollection):
     exit_stack: AsyncExitStack = None
     description: str = "MCP client tools for server interaction"
 
+    # 初始化MCP客户端工具集合
     def __init__(self):
         super().__init__()  # Initialize with empty tools list
         self.name = "mcp"  # Keep name for backward compatibility
         self.exit_stack = AsyncExitStack()
 
+    # 使用SSE传输连接到MCP服务器
     async def connect_sse(self, server_url: str) -> None:
         """Connect to an MCP server using SSE transport."""
         if not server_url:
@@ -60,6 +67,7 @@ class MCPClients(ToolCollection):
 
         await self._initialize_and_list_tools()
 
+    # 使用标准输入输出连接到MCP服务器
     async def connect_stdio(self, command: str, args: List[str]) -> None:
         """Connect to an MCP server using stdio transport."""
         if not command:
@@ -78,6 +86,7 @@ class MCPClients(ToolCollection):
 
         await self._initialize_and_list_tools()
 
+    # 初始化会话并获取服务器提供的工具列表
     async def _initialize_and_list_tools(self) -> None:
         """Initialize session and populate tool map."""
         if not self.session:
@@ -105,6 +114,7 @@ class MCPClients(ToolCollection):
             f"Connected to server with tools: {[tool.name for tool in response.tools]}"
         )
 
+    # 断开与MCP服务器的连接并清理资源
     async def disconnect(self) -> None:
         """Disconnect from the MCP server and clean up resources."""
         if self.session and self.exit_stack:
