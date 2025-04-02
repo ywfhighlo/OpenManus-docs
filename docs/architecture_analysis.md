@@ -37,52 +37,74 @@ OpenManus 是一个基于 Python 的开源 AI 代理框架，旨在通过 LLM（
 
 ## 初步图示 (Mermaid - 简化)
 
+### 1. 高层概览
+
 ```mermaid
 graph TD
-    subgraph "User Interface"
-        CLI["main.py / run_*.py"]
-    end
+    UserInterface["User Interface (CLI: main.py / run_*.py)"] --> CoreApp["Core Application (app/)"]
+```
 
-    subgraph "Core Application [app/]"
-        subgraph "Agent Layer [agent/]"
-            BaseAgent --> LLMClient
-            BaseAgent --> MemoryStore
-            BaseAgent --> ToolCollection
-            ManusAgent["Manus"] -- inherits --> BaseAgent
-            MCPAgent["MCP"] -- inherits --> BaseAgent
-            FlowAgent["Flow"] -- inherits --> BaseAgent
-            OtherAgents["..."] -- inherits --> BaseAgent
-        end
+### 2. 核心层交互
 
-        subgraph "LLM Layer [llm.py]"
-            LLMClient -- uses --> ConfigService
-            LLMClient -- uses --> TokenCounter
-            LLMClient -- interacts_with --> LLM_API["External LLM API"]
-        end
-
-        subgraph "Tool Layer [tool/]"
-            BaseTool -- defines --> ToolInterface
-            ToolCollection -- holds --> Tools["Bash, Browser, FileOps..."]
-            Tools -- inherits --> BaseTool
-            Tools -- generates --> ToolResult
-            ToolCollection -- uses --> SandboxClient
-        end
-
-        subgraph "Infrastructure"
-            ConfigService["config.py"] -- reads --> ConfigFile["config.toml"]
-            MemoryStore["schema.py: Memory"]
-            DataSchemas["schema.py: Message, etc."]
-            SandboxClient["sandbox/client.py"] -- interacts_with --> Sandbox["Docker Container"]
-            Prompts["prompt/"]
-        end
-    end
-
-    CLI --> ManusAgent
-    CLI --> MCPAgent
-    CLI --> FlowAgent
-    AgentLayer -- uses --> LLMLayer
-    AgentLayer -- uses --> ToolLayer
-    AgentLayer -- uses --> Infrastructure
+```mermaid
+graph TD
+    AgentLayer["Agent Layer"] -- uses --> LLMLayer["LLM Layer"]
+    AgentLayer -- uses --> ToolLayer["Tool Layer"]
+    AgentLayer -- uses --> Infrastructure["Infrastructure"]
     ToolLayer -- uses --> Infrastructure
+    UserInterface["User Interface"] --> AgentLayer
+```
 
+### 3. Agent 层
+
+```mermaid
+graph TD
+    subgraph "Agent Layer [agent/]"
+        BaseAgent --> LLMClient["LLM Client (app/llm.py)"]
+        BaseAgent --> MemoryStore["Memory (app/schema.py)"]
+        BaseAgent --> ToolCollection["Tool Collection (app/tool/)"]
+        ManusAgent["Manus"] -- inherits --> BaseAgent
+        MCPAgent["MCP"] -- inherits --> BaseAgent
+        FlowAgent["Flow"] -- inherits --> BaseAgent
+        OtherAgents["..."] -- inherits --> BaseAgent
+    end
+```
+
+### 4. Tool 层与沙箱
+
+```mermaid
+graph TD
+    subgraph "Tool Layer [tool/]"
+        ToolCollection -- holds --> Tools["Bash, Browser, FileOps..."]
+        Tools -- inherits --> BaseTool
+        Tools -- generates --> ToolResult
+        ToolCollection -- uses --> SandboxClient["Sandbox Client (sandbox/client.py)"]
+    end
+    SandboxClient -- interacts_with --> Sandbox["Docker Container"]
+```
+
+### 5. LLM 层
+
+```mermaid
+graph TD
+    subgraph "LLM Layer [llm.py]"
+        LLMClient -- uses --> ConfigService["config.py"]
+        LLMClient -- uses --> TokenCounter
+        LLMClient -- interacts_with --> LLM_API["External LLM API"]
+    end
+```
+
+### 6. 基础设施层
+
+```mermaid
+graph TD
+    subgraph "Infrastructure"
+        ConfigService["config.py"] -- reads --> ConfigFile["config.toml"]
+        MemoryStore["schema.py: Memory"]
+        DataSchemas["schema.py: Message, etc."]
+        SandboxClient["sandbox/client.py"]
+        Prompts["prompt/"]
+        Logger["app/logger.py"]
+        Exceptions["app/exceptions.py"]
+    end
 ```
