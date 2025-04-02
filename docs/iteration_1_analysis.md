@@ -53,30 +53,48 @@
 
 ## Mermaid 图表 (组件交互 - 聚焦本迭代)
 
+### 图1: 配置与核心依赖
+
 ```mermaid
 graph TD
-    subgraph "CoreInfrastructure"
-        ConfigService["app/config.py"] --> ConfigFile["config.toml"]
-        LLMClient["app/llm.py"] -- uses --> ConfigService
-        LLMClient -- uses --> TokenCounter["app/llm.py:TokenCounter"]
-        LLMClient -- uses --> DataSchemas
-        LLMClient -- raises --> Exceptions["app/exceptions.py"]
-        BaseAgent["app/agent/base.py"] -- uses --> LLMClient
-        BaseAgent -- uses --> MemoryStore["app/schema.py:Memory"]
-        BaseAgent -- uses --> DataSchemas
-        BaseTool["app/tool/base.py"] -- uses --> DataSchemas
-        BaseTool -- returns --> ToolResult["app/tool/base.py:ToolResult"]
-        MemoryStore -- holds --> Message["app/schema.py:Message"]
-        DataSchemas["app/schema.py"]
-        Logger["app/logger.py"]
-        Exceptions
-    end
+    ConfigService["app/config.py"] --> ConfigFile["config.toml"]
+    Logger["app/logger.py"]
 
-    ConfigService -- provides_config_to --> LLMClient
-    ConfigService -- provides_config_to --> BaseAgent
+    ConfigService -- provides_config_to --> LLMClient["app/llm.py"]
+    ConfigService -- provides_config_to --> BaseAgent["app/agent/base.py"]
+    ConfigService -- provides_config_to --> BaseTool["app/tool/base.py"]
+
     Logger -- used_by --> LLMClient
     Logger -- used_by --> BaseAgent
     Logger -- used_by --> BaseTool
+```
+
+### 图2: LLM 客户端关系
+
+```mermaid
+graph TD
+    LLMClient["app/llm.py"] -- uses --> TokenCounter["TokenCounter"]
+    LLMClient -- uses --> DataSchemas["app/schema.py"]
+    LLMClient -- raises --> Exceptions["app/exceptions.py"]
+
+    TokenCounter -- checks --> TokenLimits["Token限制"]
+    DataSchemas -- provides --> Message["Message模型"]
+    DataSchemas -- provides --> ToolCall["ToolCall模型"]
+```
+
+### 图3: Agent与Tool基础结构
+
+```mermaid
+graph TD
+    BaseAgent["app/agent/base.py"] -- uses --> LLMClient["app/llm.py"]
+    BaseAgent -- uses --> MemoryStore["Memory"]
+    BaseAgent -- uses --> DataSchemas["app/schema.py"]
+
+    BaseTool["app/tool/base.py"] -- uses --> DataSchemas
+    BaseTool -- returns --> ToolResult["ToolResult"]
+
+    MemoryStore -- holds --> Message["Message"]
+    ToolResult -- formats --> ExecutionResults["执行结果"]
 ```
 
 ## 关键发现和建议
