@@ -47,55 +47,65 @@
 *   **工具内 LLM 调用**: `BrowserUseTool` 的 `extract_content` 展示了工具在执行过程中调用 LLM 进行子任务处理的模式。
 *   **沙箱与本地兼容**: `StrReplaceEditor` 通过抽象的 `FileOperator` 实现了对不同执行环境的兼容。
 
-## Mermaid 图表 (聚焦 BrowserAgent, ToolCallAgent, BrowserUseTool)
+## Mermaid 图表 (分解)
+
+### 1. Agent 继承关系
 
 ```mermaid
 graph TD
-    subgraph "AgentInheritance"
+    subgraph "Agent Inheritance Hierarchy"
         Manus["Manus"] -- inherits --> BrowserAgent
         BrowserAgent -- inherits --> ToolCallAgent
         ToolCallAgent -- inherits --> ReActAgent["ReActAgent"]
         ReActAgent -- inherits --> BaseAgent["BaseAgent"]
     end
+```
 
-    subgraph "AgentLogic"
-        BrowserAgent -- overrides --> think_Browser["think"]
-        BrowserAgent -- overrides --> handle_special_tool_Browser["_handle_special_tool"]
-        ToolCallAgent -- defines --> think_ToolCall["think"]
-        ToolCallAgent -- defines --> act["act"]
-        ToolCallAgent -- defines --> execute_tool["execute_tool"]
-        ToolCallAgent -- defines --> handle_special_tool_ToolCall["_handle_special_tool"]
-        ReActAgent -- likely_defines --> step["step: think + act"]
-        BaseAgent -- likely_defines --> run["run: loop step"]
+### 2. BrowserAgent `think` 逻辑
+
+```mermaid
+graph TD
+    subgraph "BrowserAgent 'think' Method Logic"
+        BA_think["BrowserAgent.think"] -- calls --> BUT_getState["BrowserUseTool.get_current_state"]
+        BUT_getState -- returns --> StateScreenshot["Browser State & Screenshot"]
+        BA_think -- formats --> Prompt["Format Prompt w/ State"]
+        BA_think -- adds --> ScreenshotMsg["Add Screenshot Message"]
+        BA_think -- calls --> TCA_think["ToolCallAgent.think"]
+        TCA_think -- calls --> LLM_ask["LLM.ask_tool w/ Prompt & Screenshot"]
+        LLM_ask -- returns --> LLMResponse["LLM Response (Thoughts & Tool Calls)"]
+        TCA_think -- adds --> AssistantMsg["Add Assistant Message"]
     end
+```
 
-    subgraph "ToolInteraction"
-        BrowserAgent -- uses --> BrowserUseTool["app/tool/browser_use_tool.py"]
-        BrowserAgent -- uses --> TerminateTool["app/tool/terminate.py"]
-        ToolCallAgent -- uses --> ToolCollection["app/tool/tool_collection.py"]
+### 3. 工具使用关系
+
+```mermaid
+graph TD
+    subgraph "Tool Usage"
+        ToolCallAgent -- uses --> ToolCollection
+        BrowserAgent -- adds/uses --> BrowserUseTool
+        BrowserAgent -- adds/uses --> TerminateTool
+        Manus -- configures --> StrReplaceEditor
         ToolCollection -- executes --> SpecificTool["e.g., BrowserUseTool, StrReplaceEditor"]
         BrowserUseTool -- uses --> BrowserUseLib["browser-use library"]
-        BrowserUseTool -- uses --> LLM_Client["app/llm.py:LLM"]
-        StrReplaceEditor["app/tool/str_replace_editor.py"] -- uses --> FileOperator["app/tool/file_operators.py"]
+        BrowserUseTool -- "extract_content action" --> LLM_Client["app/llm.py:LLM"]
+        StrReplaceEditor -- uses --> FileOperator["app/tool/file_operators.py"]
     end
+```
 
-    subgraph "ContextFlow"
-        think_Browser -- calls --> get_browser_state["BrowserUseTool.get_current_state"]
-        get_browser_state -- returns --> BrowserState_Screenshot["BrowserState & Screenshot"]
-        think_Browser -- adds --> ScreenshotMessage["Message w/ Screenshot"]
-        think_Browser -- formats --> BrowserPrompt["app/prompt/browser.py w/ State"]
-        think_Browser -- calls --> think_ToolCall
-        think_ToolCall -- calls --> ask_tool["LLM_Client.ask_tool w/ BrowserPrompt"]
-        ask_tool -- returns --> LLMResponse["Content & ToolCalls"]
-        think_ToolCall -- adds --> AssistantMessage["Message w/ Content & ToolCalls"]
-        step -- calls --> act
-        act -- calls --> execute_tool
-        execute_tool -- calls --> SpecificTool.execute
-        SpecificTool.execute -- returns --> ToolResult
-        act -- adds --> ToolMessage["Message w/ ToolResult"]
+### 4. 简化 ReAct 流程
+
+```mermaid
+graph TD
+    subgraph "Simplified ReAct Cycle"
+        Step["Agent.step"] -- 1. --> Think["Agent.think (LLM decides)"]
+        Think -- "Generates" --> ThoughtsToolCalls["Thoughts & Tool Calls"]
+        Step -- 2. --> Act["Agent.act (Execute tools)"]
+        Act -- "Uses" --> ThoughtsToolCalls
+        Act -- "Executes" --> ToolExecution["ToolExecution (e.g., BrowserUseTool.execute)"]
+        ToolExecution -- "Returns" --> ToolResult
+        Act -- "Adds Result to Memory" --> MemoryUpdate["Memory Updated"]
     end
-
-    Manus -- configures --> StrReplaceEditor
 ```
 
 ## 关键发现和建议
