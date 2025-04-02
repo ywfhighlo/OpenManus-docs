@@ -1,0 +1,35 @@
+{
+    "project_path": "/d:/workcode/OpenManus-docs",
+    "total_iterations": 4,
+    "current_iteration": 4,
+    "iterations": [
+        {
+            "id": 1,
+            "title": "代理系统分析",
+            "status": "completed",
+            "output_file": "output/iteration_1_analysis.md"
+        },
+        {
+            "id": 2,
+            "title": "工具系统分析",
+            "status": "completed",
+            "output_file": "output/iteration_2_analysis.md"
+        },
+        {
+            "id": 3,
+            "title": "流程系统分析",
+            "status": "completed",
+            "output_file": "output/iteration_3_analysis.md"
+        },
+        {
+            "id": 4,
+            "title": "LLM和沙箱系统分析",
+            "status": "completed",
+            "output_file": "output/iteration_4_analysis.md"
+        }
+    ],
+    "start_time": "2023-04-02T01:30:00",
+    "end_time": "2023-04-02T02:30:00",
+    "summary_file": "output/final_report.md",
+    "architecture_file": "output/architecture_analysis.md"
+}
